@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>지방세시스템 골든타임 알리미</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>지방세시스템 골든타임 알리미 <span class="demo">v1 · 시연용 가상 데이터</span></h1>
+      <div class="sub" id="asof"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <button type="button" id="tvToggle" class="bell" aria-pressed="false" title="사무실 벽걸이 TV용 큰 화면으로 전환합니다">TV 모드</button>
+    <button type="button" id="alertToggle" class="bell" aria-pressed="false" title="긴급 상황 시 경고음과 알림을 받습니다">경보음 켜기</button>
+    <div class="nav" role="group" aria-label="화면 선택">
+      <button id="nav-board" data-view="board">상황판</button>
+      <button id="nav-intake" data-view="intake">장애 접수</button>
+      <button id="nav-advisory" data-view="advisory">권고문 대조</button>
+    </div>
+    </div>
+  </header>
+  <div id="tvBar" class="tv-bar">
+    <span><b id="tvScenario"></b> · <span id="tvClock"></span></span>
+    <span class="tv-keys">키 1~6 상황 전환 · <button type="button" class="tabs-go" id="tvAuto">A 자동 순환</button> <button type="button" class="tabs-go" id="tvExit">종료 (Esc)</button></span>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="alertOverlay" class="alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="alertTitle" hidden>
+    <div class="alert-card">
+      <p class="alert-level" id="alertLevel"></p>
+      <h2 id="alertTitle"></h2>
+      <p id="alertText"></p>
+      <p class="alert-meta" id="alertMeta"></p>
+      <div class="alert-actions">
+        <button type="button" id="alertGo">지금 할 일 보기</button>
+        <button type="button" id="alertAck">확인 · 경보 끄기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ① 상황판 -->
+  <main id="view-board" class="wrap">
+    <div class="tabs" id="scenarioTabs" role="group" aria-label="상황 선택"></div>
+    <section class="verdict" id="verdict">
+      <div class="lamp" id="lamp" aria-hidden="true"></div>
+      <div><h2 id="vTitle"></h2><p id="vText"></p></div>
+    </section>
+    <div class="grid2" id="systems"></div>
+    <section class="panel">
+      <div class="ptitle"><h3>업무별 상태</h3><span class="who">국민과 지자체 담당자가 실제로 겪는 영향</span></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="legend"><span>● 정상</span><span>▲ 느림·일부 지연</span><span>■ 이용 불가</span><span>◆ 외부 위협</span></div>
+    </section>
+    <section class="panel s-threat" id="threatPanel" hidden></section>
+    <section class="panel s-warn" id="regionPanel" hidden></section>
+    <section class="panel" id="boardGolden" hidden></section>
+    <section class="panel" id="changesPanel">
+      <div class="ptitle"><h3>이렇게 바꿨습니다</h3><span class="who">기존 모니터링 용어 → 누구나 아는 말</span></div>
+      <div class="tbl"><table>
+        <thead><tr><th>기존 화면</th><th>새 화면</th><th>왜 바꿨나</th></tr></thead>
+        <tbody>
+          <tr><td>TPS</td><td>1초 처리량</td><td>숫자 대신 평소와 비교해 많고 적음을 보여줌</td></tr>
+          <tr><td>액티브 서비스 60s+</td><td>오래 멈춘 요청</td><td>정체 신호를 비율과 문장으로 바로 알림</td></tr>
+          <tr><td>X-View 응답시간 분포</td><td>응답 속도(느린 요청 비율)</td><td>점 그래프를 읽지 않아도 판단 가능</td></tr>
+          <tr><td>세무행정_POD / 대국민_POD</td><td>공무원용 / 국민용(위택스)</td><td>누가 영향을 받는지가 먼저 보임</td></tr>
+          <tr><td>EVENT 빨간 점</td><td>결론 배너 + 업무별 신호등</td><td>무엇이 안 되는지 업무 이름으로 표시</td></tr>
+          <tr><td>(없음)</td><td>외부 위협 패널</td><td>해킹 비상 시 점검 항목과 선제 중단 문서를 바로 제시</td></tr>
+          <tr><td>(없음)</td><td>골든타임 패널</td><td>장애 시 매뉴얼상 다음 할 일과 보고문을 바로 제시</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <!-- ② 장애 접수 -->
+  <main id="view-intake" class="intake" hidden>
+    <section class="panel">
+      <div class="ptitle"><h3>장애 접수</h3><span class="who">항목을 고르면 바로 판정됩니다</span></div>
+      <form id="form" autocomplete="off">
+        <div class="field"><label for="f-start">발생 일시</label><input type="datetime-local" id="f-start" required></div>
+        <fieldset id="f-services"><legend>안 되는 서비스</legend></fieldset>
+        <div class="field"><label for="f-scope">영향 범위</label><select id="f-scope"></select></div>
+        <div class="field"><label for="f-cause">장애 원인</label><select id="f-cause"></select></div>
+        <fieldset><legend>추가 상황</legend>
+          <label class="opt"><input type="checkbox" id="f-full"><span>위택스 전체가 안 됨(전체 장애)</span></label>
+          <label class="opt"><input type="checkbox" id="f-media"><span>언론 보도·취재 있음</span></label>
+        </fieldset>
+        <div class="tabs">
+          <button type="button" id="f-now">지금 시각으로</button>
+          <button type="button" id="f-sample">장애 예시 채우기</button>
+          <button type="button" id="f-reset">초기화</button>
+        </div>
+      </form>
+    </section>
+    <div class="wrap" style="gap:18px">
+      <section class="panel" id="result"><div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div></section>
+      <section class="panel" id="intakeGolden" hidden></section>
+      <section class="panel" id="deadlinePanel">
+        <div class="ptitle"><h3>신고·납부기한 계산</h3><span class="who">지방세기본법 제24조(기한의 특례)</span></div>
+        <div class="field" style="max-width:320px;margin-top:8px"><label for="f-recover">복구(예정) 일시</label><input type="datetime-local" id="f-recover"></div>
+        <div id="deadlineOut"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ③ 권고문 대조 -->
+  <main id="view-advisory" class="wrap" hidden>
+    <section class="panel s-threat">
+      <div class="ptitle"><h3>보안권고문 대조 — 우리 시스템 중 해당될 수 있는 곳은?</h3><span class="who">가상 자산 대장 · 실제 점검 결과 아님</span></div>
+      <p class="say" style="margin-top:6px">권고문 메일이 오면 사람이 첨부를 열어 버전을 하나씩 비교해야 합니다. 여기서는 버튼 한 번으로 소관 시스템과 대조합니다.</p>
+      <div class="tabs" style="margin-top:10px"><button type="button" id="adv-run">권고문 5건 불러와 대조하기</button><button type="button" id="adv-reset">처음으로</button></div>
+      <div id="advMail" style="margin-top:12px"></div>
+    </section>
+    <section class="panel" id="advResult" hidden></section>
+  </main>
+
+  <p class="foot">모든 수치는 시연용 가상 값이며, 판정 결과와 문서는 초안입니다. 보고·배포 전 담당자가 검토하세요. 판정 기준: 「지방세정보시스템 장애발생 시 비상대응 매뉴얼」(2026.10.) · 공휴일: <span id="holidaySrc">임시 데이터</span></p>
+</div>
+
+<script src="data/rules.js"></script>
+<script src="data/holidays.js"></script>
+<script src="data/advisories.js"></script>
+<script src="data/templates.js"></script>
+<script src="data/scenarios.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

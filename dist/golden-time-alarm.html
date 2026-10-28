@@ -1,0 +1,1493 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>지방세시스템 골든타임 알리미</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* 레이아웃: 관제실 상황판 — 결론 한 문장 → 국민용·공무원용 시스템 → 업무별 신호등 → 위협·골든타임 패널 */
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --ink:#16202e; --muted:#5b6778; --line:#d5dbe4; --soft:#f5f7fa;
+  --navy:#1f3864; --accent:#2e5597; --on-accent:#ffffff;
+  --ok:#1f8a4c; --ok-bg:#e3f4ea; --warn:#b26a00; --warn-bg:#fff1d6; --bad:#c0262d; --bad-bg:#fde4e4;
+  --threat:#5b3fa8; --threat-bg:#ece7fa;
+  --font:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1520; --panel:#172131; --ink:#e7edf5; --muted:#9aa7ba; --line:#2a3850; --soft:#1b2738;
+  --navy:#a9c1ea; --accent:#7ea3e6; --on-accent:#0f1520;
+  --ok:#4cc483; --ok-bg:#163526; --warn:#f0b04a; --warn-bg:#3a2c12; --bad:#ff6b6f; --bad-bg:#3d1a1d;
+  --threat:#b9a4ff; --threat-bg:#2a2148; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1520; --panel:#172131; --ink:#e7edf5; --muted:#9aa7ba; --line:#2a3850; --soft:#1b2738;
+  --navy:#a9c1ea; --accent:#7ea3e6; --on-accent:#0f1520;
+  --ok:#4cc483; --ok-bg:#163526; --warn:#f0b04a; --warn-bg:#3a2c12; --bad:#ff6b6f; --bad-bg:#3d1a1d;
+  --threat:#b9a4ff; --threat-bg:#2a2148; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+h1{font-size:1.5rem;margin:0;color:var(--navy);text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem}
+.demo{font-size:.72rem;font-weight:600;letter-spacing:.04em;color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:middle}
+.nav{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px}
+.nav button,.tabs button,.doctabs button{font:inherit;cursor:pointer}
+.nav button{border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:6px;font-weight:600}
+.nav button[aria-pressed="true"]{background:var(--navy);color:var(--on-accent)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font-size:.85rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:6px}
+.tabs button[aria-pressed="true"]{background:var(--navy);color:var(--on-accent);border-color:var(--navy)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.verdict{display:flex;gap:18px;align-items:center;padding:20px 22px;border-radius:10px;border:2px solid var(--c);background:var(--cbg)}
+.lamp{flex:none;width:64px;height:64px;border-radius:50%;background:var(--c);display:grid;place-items:center;color:var(--panel);font-size:1.7rem;font-weight:700;box-shadow:0 0 0 6px var(--cbg),0 0 0 8px var(--c)}
+.verdict h2{margin:0;font-size:1.45rem;color:var(--c);text-wrap:balance}
+.verdict p{margin:4px 0 0;font-size:1rem}
+.s-ok{--c:var(--ok);--cbg:var(--ok-bg)} .s-warn{--c:var(--warn);--cbg:var(--warn-bg)} .s-bad{--c:var(--bad);--cbg:var(--bad-bg)} .s-threat{--c:var(--threat);--cbg:var(--threat-bg)}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.ptitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.ptitle h3{margin:0;font-size:1.1rem}
+.who{color:var(--muted);font-size:.8rem}
+.pill{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;padding:3px 10px;border-radius:999px;color:var(--c);background:var(--cbg);border:1px solid var(--c)}
+.say{margin:10px 0 14px;font-size:.97rem}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{border-top:3px solid var(--c);background:var(--cbg);padding:10px;border-radius:0 0 6px 6px;min-width:0}
+.kpi .l{font-size:.78rem;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:1.45rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi .n{font-size:.75rem;color:var(--muted)}
+@media (max-width:460px){.kpis{grid-template-columns:1fr}}
+.spark{margin-top:14px}
+.spark svg{width:100%;height:auto;display:block}
+.spark .cap{font-size:.75rem;color:var(--muted);display:flex;justify-content:space-between}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--c);background:var(--cbg);border-radius:8px;padding:10px 12px;display:grid;gap:2px}
+.tile b{font-size:.95rem}
+.tile span{font-size:.8rem;color:var(--c);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.78rem;color:var(--muted);margin-top:10px}
+
+/* 외부 위협 */
+.facts{margin:8px 0 14px;padding-left:1.1em;font-size:.9rem}
+.checks{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.checks label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.checks input{margin-top:4px;accent-color:var(--threat)}
+.checks input:checked + span{color:var(--muted);text-decoration:line-through}
+.progress{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:10px 0 4px}
+.progress i{display:block;height:100%;background:var(--threat);transition:width .2s}
+
+/* 골든타임 */
+.gt-head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin:8px 0 12px}
+.badge{font-weight:700;padding:4px 10px;border-radius:6px;background:var(--c);color:var(--panel)}
+.clock{font-family:var(--mono);font-size:1.6rem;font-weight:600;font-variant-numeric:tabular-nums}
+.slider{display:grid;gap:4px;flex:1 1 260px}
+.slider label{font-size:.8rem;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--c)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.steps li{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:6px;border:1px solid var(--line)}
+.steps .t{font-family:var(--mono);font-size:.85rem;font-weight:600}
+.steps .st{font-size:.75rem;font-weight:700;white-space:nowrap}
+.steps li.done{opacity:.6} .steps li.done .st{color:var(--ok)}
+.steps li.now{border-color:var(--bad);background:var(--bad-bg)} .steps li.now .st{color:var(--bad)}
+.steps li.next .st{color:var(--muted)}
+@media (max-width:520px){.steps li{grid-template-columns:64px 1fr}.steps .st{grid-column:2}}
+.facts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin-bottom:12px}
+.fact{background:var(--soft);border-radius:8px;padding:10px 12px}
+.fact .l{font-size:.75rem;color:var(--muted)}
+.fact .v{font-weight:700}
+.fact small{display:block;color:var(--muted);font-size:.75rem}
+
+/* 문서 */
+.docs{margin-top:14px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.doctabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--soft)}
+.doctabs button{border:0;background:transparent;color:var(--muted);padding:9px 12px;font-size:.85rem;border-bottom:2px solid transparent}
+.doctabs button[aria-pressed="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--accent);background:var(--panel)}
+.docbody{padding:12px 14px}
+.docbody pre{white-space:pre-wrap;font-family:var(--font);font-size:.86rem;margin:8px 0 0}
+.copy{font:inherit;font-size:.8rem;border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:6px;padding:4px 10px;cursor:pointer}
+
+/* 장애 접수 */
+.intake{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.intake{grid-template-columns:1fr}}
+form{display:grid;gap:14px}
+fieldset{border:0;padding:0;margin:0;display:grid;gap:6px}
+legend{font-weight:700;font-size:.9rem;margin-bottom:4px}
+.field{display:grid;gap:4px}
+.field label,.hint{font-size:.8rem;color:var(--muted)}
+input[type=datetime-local],select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:100%}
+.opt{display:flex;gap:8px;align-items:flex-start;font-size:.9rem}
+.opt input{margin-top:4px}
+.cat{font-size:.72rem;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-top:6px}
+.result-empty{color:var(--muted);padding:30px 10px;text-align:center}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:.92rem;margin:10px 0}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.warnbox{border-left:4px solid var(--threat);background:var(--threat-bg);padding:8px 12px;border-radius:0 6px 6px 0;font-size:.88rem;margin-top:8px}
+
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:560px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.78rem}
+td:first-child{font-family:var(--mono);color:var(--muted)}
+.foot{font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.s-bad .lamp{animation:pulse 1.6s ease-in-out infinite}}
+@keyframes pulse{50%{box-shadow:0 0 0 10px var(--cbg),0 0 0 12px var(--c)}}
+
+/* 긴급 경보(재난문자형) */
+.bell{font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:8px 12px;border-radius:8px}
+.bell[aria-pressed="true"]{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.alert-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--ov);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lv-critical{--ov:rgba(192,38,45,.55);--lv:var(--bad);--lvbg:var(--bad-bg)}
+.lv-urgent{--ov:rgba(91,63,168,.45);--lv:var(--threat);--lvbg:var(--threat-bg)}
+.alert-card{width:min(640px,100%);background:var(--panel);border:4px solid var(--lv);border-radius:14px;padding:26px 26px 22px;display:grid;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.alert-level{margin:0;justify-self:start;font-weight:700;font-size:.9rem;letter-spacing:.06em;color:var(--panel);background:var(--lv);padding:4px 12px;border-radius:6px}
+.alert-card h2{margin:0;font-size:1.5rem;color:var(--lv);text-wrap:balance}
+.alert-card p{margin:0}
+.alert-meta{font-size:.8rem;color:var(--muted)}
+.alert-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:6px}
+.alert-actions button{font:inherit;font-weight:700;cursor:pointer;border-radius:8px;padding:10px 16px;border:2px solid var(--lv);background:transparent;color:var(--lv)}
+.alert-actions #alertAck{background:var(--lv);color:var(--panel)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top,0px));z-index:40;max-width:min(680px,calc(100% - 32px));background:var(--navy);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+/* 깜빡임: 초당 1회(광과민 기준 초당 3회 미만), 움직임 줄이기 설정 시 끔 */
+@media (prefers-reduced-motion:no-preference){
+  .lv-critical.flash{animation:flash 1s steps(2,jump-none) infinite}
+  .lv-critical.flash .alert-card{animation:cardflash 1s steps(2,jump-none) infinite}
+}
+@keyframes flash{0%{background:rgba(192,38,45,.62)}100%{background:rgba(192,38,45,.18)}}
+@keyframes cardflash{0%{border-color:var(--bad)}100%{border-color:var(--warn)}}
+
+/* 지역 접속 불량·권고문 대조 */
+.tabs-go{font:inherit;font-size:.85rem;cursor:pointer;border:1px solid var(--navy);background:var(--navy);color:var(--on-accent);padding:7px 12px;border-radius:6px}
+#regionPanel fieldset .opt{display:inline-flex;gap:6px;align-items:center}
+#advMail small,#regionPanel small{color:var(--muted)}
+
+/* TV 모드 — 벽걸이 TV용 큰 화면 */
+.tv-bar{display:none}
+html.tv{font-size:clamp(16px,1.35vw,26px)}
+body.tv{font-size:1rem;padding:12px 24px}
+body.tv header,body.tv #scenarioTabs,body.tv #threatPanel,body.tv #regionPanel,body.tv #boardGolden,body.tv #changesPanel,body.tv .foot,body.tv #view-intake,body.tv #view-advisory{display:none!important}
+body.tv .wrap{max-width:none}
+body.tv .tv-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font-size:.7rem;color:var(--muted);margin-bottom:10px}
+body.tv .tv-bar b{color:var(--ink);font-size:.8rem}
+body.tv .tv-keys .tabs-go{font-size:.65rem;padding:4px 10px}
+body.tv .verdict{padding:26px 32px}
+body.tv .lamp{width:96px;height:96px;font-size:2.4rem}
+body.tv .verdict h2{font-size:1.9rem}
+body.tv .verdict p{font-size:1.05rem}
+body.tv .kpi .v{font-size:2rem}
+body.tv .kpi .l,body.tv .kpi .n{font-size:.7rem}
+body.tv .tiles{grid-template-columns:repeat(3,1fr)}
+body.tv .tile b{font-size:1.1rem}
+body.tv .tile span{font-size:.85rem}
+body.tv .kpi .v{font-size:1.7rem;white-space:nowrap}
+body.tv .spark{display:none}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>지방세시스템 골든타임 알리미 <span class="demo">v1 · 시연용 가상 데이터</span></h1>
+      <div class="sub" id="asof"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <button type="button" id="tvToggle" class="bell" aria-pressed="false" title="사무실 벽걸이 TV용 큰 화면으로 전환합니다">TV 모드</button>
+    <button type="button" id="alertToggle" class="bell" aria-pressed="false" title="긴급 상황 시 경고음과 알림을 받습니다">경보음 켜기</button>
+    <div class="nav" role="group" aria-label="화면 선택">
+      <button id="nav-board" data-view="board">상황판</button>
+      <button id="nav-intake" data-view="intake">장애 접수</button>
+      <button id="nav-advisory" data-view="advisory">권고문 대조</button>
+    </div>
+    </div>
+  </header>
+  <div id="tvBar" class="tv-bar">
+    <span><b id="tvScenario"></b> · <span id="tvClock"></span></span>
+    <span class="tv-keys">키 1~6 상황 전환 · <button type="button" class="tabs-go" id="tvAuto">A 자동 순환</button> <button type="button" class="tabs-go" id="tvExit">종료 (Esc)</button></span>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="alertOverlay" class="alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="alertTitle" hidden>
+    <div class="alert-card">
+      <p class="alert-level" id="alertLevel"></p>
+      <h2 id="alertTitle"></h2>
+      <p id="alertText"></p>
+      <p class="alert-meta" id="alertMeta"></p>
+      <div class="alert-actions">
+        <button type="button" id="alertGo">지금 할 일 보기</button>
+        <button type="button" id="alertAck">확인 · 경보 끄기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ① 상황판 -->
+  <main id="view-board" class="wrap">
+    <div class="tabs" id="scenarioTabs" role="group" aria-label="상황 선택"></div>
+    <section class="verdict" id="verdict">
+      <div class="lamp" id="lamp" aria-hidden="true"></div>
+      <div><h2 id="vTitle"></h2><p id="vText"></p></div>
+    </section>
+    <div class="grid2" id="systems"></div>
+    <section class="panel">
+      <div class="ptitle"><h3>업무별 상태</h3><span class="who">국민과 지자체 담당자가 실제로 겪는 영향</span></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="legend"><span>● 정상</span><span>▲ 느림·일부 지연</span><span>■ 이용 불가</span><span>◆ 외부 위협</span></div>
+    </section>
+    <section class="panel s-threat" id="threatPanel" hidden></section>
+    <section class="panel s-warn" id="regionPanel" hidden></section>
+    <section class="panel" id="boardGolden" hidden></section>
+    <section class="panel" id="changesPanel">
+      <div class="ptitle"><h3>이렇게 바꿨습니다</h3><span class="who">기존 모니터링 용어 → 누구나 아는 말</span></div>
+      <div class="tbl"><table>
+        <thead><tr><th>기존 화면</th><th>새 화면</th><th>왜 바꿨나</th></tr></thead>
+        <tbody>
+          <tr><td>TPS</td><td>1초 처리량</td><td>숫자 대신 평소와 비교해 많고 적음을 보여줌</td></tr>
+          <tr><td>액티브 서비스 60s+</td><td>오래 멈춘 요청</td><td>정체 신호를 비율과 문장으로 바로 알림</td></tr>
+          <tr><td>X-View 응답시간 분포</td><td>응답 속도(느린 요청 비율)</td><td>점 그래프를 읽지 않아도 판단 가능</td></tr>
+          <tr><td>세무행정_POD / 대국민_POD</td><td>공무원용 / 국민용(위택스)</td><td>누가 영향을 받는지가 먼저 보임</td></tr>
+          <tr><td>EVENT 빨간 점</td><td>결론 배너 + 업무별 신호등</td><td>무엇이 안 되는지 업무 이름으로 표시</td></tr>
+          <tr><td>(없음)</td><td>외부 위협 패널</td><td>해킹 비상 시 점검 항목과 선제 중단 문서를 바로 제시</td></tr>
+          <tr><td>(없음)</td><td>골든타임 패널</td><td>장애 시 매뉴얼상 다음 할 일과 보고문을 바로 제시</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <!-- ② 장애 접수 -->
+  <main id="view-intake" class="intake" hidden>
+    <section class="panel">
+      <div class="ptitle"><h3>장애 접수</h3><span class="who">항목을 고르면 바로 판정됩니다</span></div>
+      <form id="form" autocomplete="off">
+        <div class="field"><label for="f-start">발생 일시</label><input type="datetime-local" id="f-start" required></div>
+        <fieldset id="f-services"><legend>안 되는 서비스</legend></fieldset>
+        <div class="field"><label for="f-scope">영향 범위</label><select id="f-scope"></select></div>
+        <div class="field"><label for="f-cause">장애 원인</label><select id="f-cause"></select></div>
+        <fieldset><legend>추가 상황</legend>
+          <label class="opt"><input type="checkbox" id="f-full"><span>위택스 전체가 안 됨(전체 장애)</span></label>
+          <label class="opt"><input type="checkbox" id="f-media"><span>언론 보도·취재 있음</span></label>
+        </fieldset>
+        <div class="tabs">
+          <button type="button" id="f-now">지금 시각으로</button>
+          <button type="button" id="f-sample">장애 예시 채우기</button>
+          <button type="button" id="f-reset">초기화</button>
+        </div>
+      </form>
+    </section>
+    <div class="wrap" style="gap:18px">
+      <section class="panel" id="result"><div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div></section>
+      <section class="panel" id="intakeGolden" hidden></section>
+      <section class="panel" id="deadlinePanel">
+        <div class="ptitle"><h3>신고·납부기한 계산</h3><span class="who">지방세기본법 제24조(기한의 특례)</span></div>
+        <div class="field" style="max-width:320px;margin-top:8px"><label for="f-recover">복구(예정) 일시</label><input type="datetime-local" id="f-recover"></div>
+        <div id="deadlineOut"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ③ 권고문 대조 -->
+  <main id="view-advisory" class="wrap" hidden>
+    <section class="panel s-threat">
+      <div class="ptitle"><h3>보안권고문 대조 — 우리 시스템 중 해당될 수 있는 곳은?</h3><span class="who">가상 자산 대장 · 실제 점검 결과 아님</span></div>
+      <p class="say" style="margin-top:6px">권고문 메일이 오면 사람이 첨부를 열어 버전을 하나씩 비교해야 합니다. 여기서는 버튼 한 번으로 소관 시스템과 대조합니다.</p>
+      <div class="tabs" style="margin-top:10px"><button type="button" id="adv-run">권고문 5건 불러와 대조하기</button><button type="button" id="adv-reset">처음으로</button></div>
+      <div id="advMail" style="margin-top:12px"></div>
+    </section>
+    <section class="panel" id="advResult" hidden></section>
+  </main>
+
+  <p class="foot">모든 수치는 시연용 가상 값이며, 판정 결과와 문서는 초안입니다. 보고·배포 전 담당자가 검토하세요. 판정 기준: 「지방세정보시스템 장애발생 시 비상대응 매뉴얼」(2026.10.) · 공휴일: <span id="holidaySrc">임시 데이터</span></p>
+</div>
+
+<script>
+/*
+ * 판정 규칙표 — 「지방세정보시스템 장애발생 시 비상대응 매뉴얼」(2026.10.) 기준
+ * ─────────────────────────────────────────────
+ * 이 파일만 바꾸면 다른 정보시스템에도 그대로 쓸 수 있습니다(범용 키트).
+ * 코드를 몰라도 '이름', '분류', '시간' 값만 고치면 됩니다.
+ * ※ 'TODO 확인' 표시는 매뉴얼에 명시되지 않아 담당 부서 확인이 필요한 값입니다.
+ */
+window.RULES = {
+  system: {
+    name: '표준지방세정보시스템 및 위택스',
+    url: 'www.wetax.go.kr',
+    owner: '행정안전부 지방세입정보과',
+    serverLocation: '한국지역정보개발원(KLID)',
+    baseGrade: 1, // A1(국가 핵심) 시스템 → 1등급 원칙
+  },
+
+  // 업무시간: 매뉴얼에 정의가 없어 내부업무 등급보정 기준(평일 09~18시)을 준용 — TODO 확인
+  businessHours: { start: 9, end: 18 },
+  // 등급 보정 기준(정보시스템 안정성 고시): 대국민 09~21시, 내부 09~18시 이외 1개 등급 하향
+  gradeHours: { public: { start: 9, end: 21 }, internal: { start: 9, end: 18 } },
+
+  // 서비스 목록과 분류
+  //  critical = 중요 대민서비스(유형1 대상), public = 기타 대민서비스(유형2), internal = 내부 업무(유형3)
+  services: [
+    { id: 'acq',     name: '취득세·등록면허세 신고', cat: 'critical' },
+    { id: 'pay',     name: '지방세 납부',            cat: 'critical' },
+    { id: 'cert',    name: '제증명 발급',            cat: 'critical' },
+    { id: 'seize',   name: '압류 해제',              cat: 'critical' },
+    { id: 'nts',     name: '국세 연계(지방소득세 신고)', cat: 'public' },
+    { id: 'seoul',   name: '서울시 과세증명 통합발급',  cat: 'public' },
+    { id: 'family',  name: '가족관계·등기부 연계',     cat: 'public' },
+    { id: 'refund',  name: '환급',                   cat: 'public' },
+    { id: 'ledger',  name: '재산세 대장정비·통계',     cat: 'internal' },
+    { id: 'claim',   name: '경정청구·세무대리인 대행승인', cat: 'internal' },
+  ],
+
+  scopes: [
+    { id: 'national', name: '전국(서울 제외)', gradeDown: 0 },
+    { id: 'single',   name: '단일 광역 또는 기초 지자체', gradeDown: 1 },
+    { id: 'partial',  name: '단일 지자체의 일부 지역', gradeDown: 2 },
+  ],
+
+  causes: [
+    { id: 'unknown',  name: '확인 중' },
+    { id: 'internal', name: '내부요인(HW·SW·과부하)' },
+    { id: 'infra',    name: '기반시설(전원·항온항습 등)' },
+    { id: 'cyber',    name: '사이버침해(DDoS·해킹·랜섬웨어)' },
+    { id: 'link',     name: '외부 연계기관 장애' },
+  ],
+
+  types: {
+    1: { name: '유형1', desc: '업무시간 내 중요 대민서비스 장애', emergency: '세제국 비상대응체계 즉시 가동',
+         report: '국장 → 실장 → 차관실 → 장관실 (필요시 대통령실)' },
+    2: { name: '유형2', desc: '업무시간 내 영향이 상대적으로 낮은 대민서비스 장애', emergency: '지방세입정보과 초동 대응',
+         report: '국장 → 실장 → 차관실 → 장관실 (필요시 대통령실)' },
+    3: { name: '유형3', desc: '업무시간 외 장애 또는 내부 업무 장애', emergency: '지방세입정보과 차원 대응',
+         report: '실 내부보고(국장·실장)' },
+  },
+
+  // 유형2 → 비상대응체계 전환 기준
+  type2Escalation: { hours: 4, endOfDay: 18 },
+
+  // 골든타임 타임라인. at = 경과 분(minutes) 또는 clock = 시각(시). when = 적용 조건
+  timeline: [
+    { at: 0,   label: '즉시', when: 't12', task: '유형 판정 · 국장~장관실 최초보고(텔레그램) · KLID 장애 공유방 가동 · 지방세정책과·재정정책과 공유' },
+    { at: 0,   label: '즉시', when: 'full', task: '위택스 Sorry page 게시(서비스 이용 제한 안내)' },
+    { at: 0,   label: '즉시', when: 'partial', task: '위택스 공지사항·서비스별 팝업 안내' },
+    { at: 0,   label: '즉시', when: 't3', task: '위택스 공지 · KLID 장애 공유방 가동 · 지방정부 상황 안내 · 실 내부보고' },
+    { at: 0,   label: '즉시', when: 'cyber', task: '디지털보안정책과 즉시 공유 · 침해사고 신고(KISA 118·보호나라) · 해킹 의심 시 서버는 끄지 말고 외부 접속만 차단(흔적 보존)' },
+    { at: 10,  label: '10분', when: 't12', task: '장애 성립(10분 이상) — 디지털안전상황실 총괄관리 개시, 상황 확인 요청 대응' },
+    { at: 30,  label: '30분', when: 'full', task: '전체 장애 30분 지속 — 1시간 이내 기자단 문자 전파(대변인실 협의)' },
+    { at: 30,  label: '30분', when: 't1', task: '정부24·금융결제원 등 연계기관 납부 불가 안내 공문' },
+    { at: 60,  label: '1시간', when: 't1', task: '지자체에 세목별 대응 매뉴얼 공문 · 신고·납부기한 연장 검토' },
+    { at: 120, label: '2시간', when: 'g1', task: '1등급 장애 2시간 경과 — 중간보고(서면), 디지털안전상황실 2시간 간격 상황 확인 대응' },
+    { at: 240, label: '4시간', when: 't2', task: '유형2 장기화 — 세제국 비상대응체계 가동, KLID 현장상황실 운영' },
+    { at: 240, label: '4시간', when: 't1', task: '복구 지연 — 현장상황실 상주, 언론 동향 수시보고, 보도자료(기한연장) 검토' },
+    { clock: 17, label: '18시 임박', when: 't2', task: '업무 종료 임박 — 4시간 전이라도 비상대응체계 가동 검토' },
+    { clock: 17, label: '18시 임박', when: 't1', task: '업무 종료 임박 — 익일 처리 안내, 기한 추가 연장 여부 결정' },
+    { at: 720, label: '12시간', when: 'g1', task: '위기경보 ‘주의’ 검토 — 디지털보안정책과 총괄, 지방세입정보과장 참여' },
+    { at: 'nextBiz', label: '다음 평일 09시', when: 'afterHoursCritical', task: '미복구 시 원래 장애등급 부여 → 유형1로 재판정' },
+  ],
+
+  // 긴급 경보 — 재난문자 3단계를 본뜬 알림 강도
+  //  critical(위급): 화면 깜빡임 + 사이렌 + 알림 / urgent(긴급): 경고음 + 알림창 / info(안전안내): 소리 없이 띠 알림
+  alerts: {
+    critical: { name: '위급', sound: 'siren', flash: true },
+    urgent:   { name: '긴급', sound: 'beep',  flash: false },
+    info:     { name: '안전안내', sound: null, flash: false },
+  },
+  // 판정 유형·상황판 상태 → 경보 단계
+  alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info' } },
+
+  // 기한 특례(지방세기본법 §24)
+  deadline: {
+    article: '지방세기본법 제24조',
+    laborDay: { month: 5, day: 1 }, // §24① 근로자의 날
+  },
+
+  // 일부 지자체 접속 불량 — 원인 분리 기준(제안 기준, 확정 전 TODO 확인)
+  region: {
+    escalateCount: 5, // 서로 다른 지자체 N곳 이상 동시 신고 시 장애 접수(유형 판정)로 격상 검토
+    questions: [
+      { id: 'central', q: '중앙 서버 지표는 정상인가요?', hint: '1초 처리량·느린 요청 비율(상황판 위쪽 두 카드)' },
+      { id: 'others', q: '같은 지자체에서 세외수입 등 다른 시스템도 느린가요?', hint: '지자체 담당자에게 한 번만 물어보면 됩니다' },
+      { id: 'sameArea', q: '신고한 지자체가 한 권역(같은 광역망·통신 구간)에 몰려 있나요?', hint: '접수 목록의 지역을 보세요' },
+    ],
+    causes: {
+      central: { name: '중앙 시스템 문제 가능', who: 'KLID·세제국', ask: '중앙 서버 상태 현장 확인(KLID)', action: '장애 접수 화면에서 유형을 판정하고 골든타임을 시작하세요. 중앙 지표 이상이 확인된 상태입니다.' },
+      area:    { name: '권역 통신망 문제 의심', who: '광역 네트워크 담당·통신사', ask: '해당 권역 광역망·통신 구간 점검', action: '중앙 서버는 정상이고 여러 지자체의 다른 시스템도 느립니다. 해당 권역 광역망·통신 구간 점검을 요청하세요.' },
+      local:   { name: '해당 지자체 네트워크 문제 의심', who: '지자체 전산 담당', ask: '청사 네트워크(회선·방화벽·프록시) 점검', action: '중앙 서버는 정상이고 해당 지자체의 다른 시스템도 느립니다. 지자체 청사 네트워크(회선·방화벽) 점검을 요청하세요.' },
+      client:  { name: '단말·프로그램 설치 문제 의심', who: '지자체 담당·KLID', ask: '단말 브라우저·프로그램 설치·캐시 점검 및 접속 기록 확인', action: '다른 시스템은 정상입니다. 단말 브라우저·프로그램 설치·캐시를 점검하고, KLID에 해당 접속 기록을 확인 요청하세요.' },
+    },
+  },
+};
+
+</script>
+<script>
+/*
+ * 공휴일 임시 데이터 — 공휴일 API(한국천문연구원 특일정보)에 연결되기 전까지만 사용합니다.
+ * server.js를 실행하고 .env에 인증키를 넣으면 API 값으로 자동 대체됩니다.
+ * ※ 임시 데이터는 확인용이며, 실제 기한 판단은 API 또는 관보로 확인하세요.
+ */
+window.HOLIDAYS_FALLBACK = {
+  2026: [
+    '2026-01-01', '2026-02-16', '2026-02-17', '2026-02-18', '2026-03-02',
+    '2026-05-05', '2026-05-25', '2026-06-03', '2026-08-17', '2026-09-24',
+    '2026-09-25', '2026-09-26', '2026-10-05', '2026-10-09', '2026-12-25',
+  ],
+};
+
+</script>
+<script>
+/*
+ * 보안권고문 대조 — 시연용 가상 자산 대장과 권고문 요약
+ * - 자산 대장·버전은 모두 가상 예시입니다(실제 소관 시스템 정보 아님).
+ * - PHP 영향 버전은 과기정통부·KISA 「PHP2Shell 보안 취약점 FAQ」의 안전 버전과 일치함을 확인했습니다.
+ * - Java 영향 버전은 공문 사진에서 읽은 값이라 원문 확인이 필요합니다(TODO 확인).
+ * - 실제 도입 시 INVENTORY는 자산 대장 연동으로, ADVISORIES는 권고문 메일 수신으로 대체합니다.
+ */
+window.ADVISORIES = [
+  { id: 'php-urgent', product: 'php', title: 'PHP 원격 코드 실행 취약점(긴급)', src: '행정안전부 긴급 보안조치 요청', date: '10.22.', mode: 'fixed',
+    lines: [{ line: '8.2', fixed: '8.2.35', sunset: '12.31. 지원 종료 예정 — 8.3 이상 권장' }, { line: '8.3', fixed: '8.3.36' }, { line: '8.4', fixed: '8.4.27' }, { line: '8.5', fixed: '8.5.12' }],
+    note: '8.1 이하는 패치가 없어 8.3 이상으로 전환, 8.2는 12.31. 지원 종료' },
+  { id: 'php-temp', product: 'php', title: 'PHP 신규 취약점 — 임시 조치 권고', src: 'KISA 보안권고', date: '10.24.', mode: 'temp',
+    note: '10.24. 공지(신규 1건) — 보안 업데이트로 패치, 그 전까지 추가 보안 설정' },
+  { id: 'java', product: 'java', title: 'Oracle Java 인증서 신뢰 취약점', src: 'KISA 보안권고', date: '10.23.', mode: 'upTo',
+    lines: [{ line: '8', upTo: '8u511' }, { line: '11', upTo: '11.0.33' }, { line: '17', upTo: '17.0.21' }, { line: '21', upTo: '21.0.13' }, { line: '25', upTo: '25.0.5' }, { line: '27', upTo: '27.0.1' }],
+    note: 'Oracle 보안 패치 적용' },
+  { id: 'laravel', product: 'laravel', title: 'Laravel 보안 업데이트', src: 'KISA 보안권고', date: '10.23.', mode: 'noDetail',
+    note: '첨부 본문에서 영향 버전 확인 필요' },
+  { id: 'node', product: 'node', title: 'Node.js 보안 업데이트', src: 'KISA 보안권고', date: '10.23.', mode: 'noDetail',
+    note: '첨부 본문에서 영향 버전 확인 필요' },
+];
+
+window.SW_NAME = { php: 'PHP', java: 'Java', laravel: 'Laravel', node: 'Node.js' };
+
+// [시스템, 구분, 소프트웨어, 버전(빈 값 = 미확인)] — 가상 예시
+window.INVENTORY = [
+  ['위택스 웹·WAS', '국민용', 'java', '17.0.19'],
+  ['스마트위택스 API', '국민용', 'java', '21.0.14'],
+  ['세무행정 WAS', '공무원용', 'java', '8u401'],
+  ['세무대리인 대행 서비스', '외부 접속', 'php', '8.1.30'],
+  ['지자체 세정 안내 페이지', '외부 접속', 'php', ''],
+  ['지방세 통계·조회 포털', '공무원용', 'php', '8.3.30'],
+  ['지방세 통계·조회 포털(프레임워크)', '공무원용', 'laravel', '10.48'],
+  ['민간앱 환급 연계 서버', '외부 접속', 'node', '20.11'],
+];
+
+</script>
+<script>
+/*
+ * 문서 틀 — 매뉴얼 예시 문안에 빈칸({{…}})을 뚫어 둔 것입니다.
+ * 문구를 바꾸고 싶으면 이 파일만 고치면 됩니다.
+ */
+window.TEMPLATES = [
+  {
+    id: 'report', name: '최초보고(텔레그램)', to: '국장 · 실장 · 차관실 · 장관실',
+    body:
+`현재 지방세정보시스템 장애 발생 상황으로 {{impactShort}}에 차질이 발생하여 우선 보고드립니다. 복구동향 및 세부사항은 추가 보고드리겠습니다.
+ㅇ 대상시스템명 : {{system}} ({{grade}}등급)
+ㅇ 기관(부서)명 : {{owner}}
+ㅇ 장애시간 : {{startText}}~현재
+ㅇ 장애유형 : {{typeName}} — {{typeDesc}}
+ㅇ 서버 위치 : {{serverLocation}}
+ㅇ 피해내용 : {{services}} 불가
+ㅇ 장애원인 : {{cause}}
+ㅇ 조치사항 : {{actions}}`,
+  },
+  {
+    id: 'dsc', name: '디지털안전상황실 상황보고', to: '디지털안전상황실',
+    body:
+`ㅇ 대상시스템명 : {{system}} ({{grade}}등급)
+  ※ URL : {{url}}
+ㅇ 기관(부서)명 : {{owner}}
+ㅇ 발생일시 : {{startText}} ~
+ㅇ 서버 위치 : {{serverLocation}}
+ㅇ 피해내용 : {{services}} 불가
+ㅇ 장애원인 : {{cause}}
+ㅇ 조치사항 : {{actions}}`,
+  },
+  {
+    id: 'sorry', name: '위택스 Sorry page / 공지', to: '국민(위택스 이용자)',
+    body:
+`[안내]
+현재 지방세정보시스템 {{causePublic}}(으)로 인하여 {{services}} 서비스 이용이 원활하지 않습니다.
+• 서비스 중단기간 : {{startShort}} ~ 서비스 복구시까지
+{{altGuide}}최대한 신속하게 원인을 파악하여 조치토록 하겠습니다.
+이용에 불편을 드려 죄송합니다.`,
+  },
+  {
+    id: 'press', name: '기자단 문자', to: '대변인실 → 기자단',
+    body:
+`[지방세정보시스템 장애 안내] 지방세정보시스템(위택스)이 {{causePublic}}(으)로 {{startClock}}부터 서비스가 지연되어 현재 {{services}} 서비스가 불가합니다. 행정안전부는 불편을 최소화하기 위해 복구를 진행 중입니다. 복구 진행 상황은 별도로 공지드리겠습니다.`,
+  },
+];
+
+// 일부 지자체 접속 불량 대응 문서 — {{cause}} 등은 원인 분리 결과에 따라 채워집니다
+window.REGION_TEMPLATES = [
+  {
+    id: 'regionCheck', name: '점검 요청(지자체·담당)', to: '{{who}}',
+    body:
+`[점검 요청] 지방세 프로그램 접속 지연 관련
+ㅇ 신고 : {{firstReport}}부터 {{areas}} 접속 지연·접속 불가
+ㅇ 중앙 확인 결과 : 위택스·세무행정 중앙 서버 지표 {{centralText}}, {{othersText}}
+ㅇ 판단 : {{causeName}}
+ㅇ 요청사항
+ 1. {{ask}}
+ 2. 조치 후 접속 상태 확인 및 결과 회신
+ 3. 해소 즉시 SNS 장애 공유방에 공유`,
+  },
+  {
+    id: 'regionShare', name: '공유방 안내', to: '세무행정 오픈채팅방 · KLID 공유방',
+    body:
+`[접속 지연 안내] {{firstReport}}경부터 {{areas}}에서 지방세 프로그램 접속이 지연된다는 신고가 있습니다.
+중앙 서버는 {{centralText}}이며, {{causeName}}로 보고 점검을 요청했습니다.
+같은 증상이 있는 지자체는 지자체명과 시각을 이 방에 알려 주세요. 해소되면 바로 공유드리겠습니다.`,
+  },
+  {
+    id: 'regionReport', name: '상황 보고(간단)', to: '과장 · 국장',
+    body:
+`일부 지자체 지방세 프로그램 접속 지연 상황을 보고드립니다.
+ㅇ 신고 : {{count}}곳({{areas}}), 최초 {{firstReport}}, 경과 {{elapsed}}
+ㅇ 중앙 : 위택스·세무행정 서버 {{centralText}}
+ㅇ 원인 판단 : {{causeName}} — {{who}} 점검 요청
+ㅇ 현재 : 정상 확인 {{okCount}}곳, 확인·처리 중 {{pendingCount}}곳
+ㅇ 격상 기준 : {{escalateText}}`,
+  },
+];
+
+// 보안권고문 대조 결과 문서
+window.ADVISORY_TEMPLATES = [
+  {
+    id: 'advisoryReq', name: 'KLID 확인 요청', to: '한국지역정보개발원(KLID)',
+    body:
+`[확인 요청] 보안권고문 {{advCount}}건 관련 소관 시스템 점검
+ㅇ 대상 권고문
+{{advList}}
+ㅇ 대조 결과 해당 가능·확인 필요 {{sysHit}}곳(항목 {{hitCount}}건)
+{{hitList}}
+ㅇ 요청사항
+ 1. 위 시스템의 해당 소프트웨어 사용 여부·버전 확인
+ 2. 해당 시 패치 적용 또는 임시 조치 일정
+ 3. 지원 종료 버전은 업그레이드 계획
+ㅇ 회신 : 금일 18:00까지 SNS 장애 공유방 및 공문`,
+  },
+  {
+    id: 'advisoryReport', name: '상황 보고(간단)', to: '과장 · 국장',
+    body:
+`보안권고문 {{advCount}}건 접수에 따른 소관 시스템 점검 상황을 보고드립니다.
+ㅇ 대조 결과 : 해당 가능 {{yesCount}}곳, 확인 필요 {{checkCount}}곳, 해당 없음 {{noCount}}곳
+ㅇ 우선 조치 : {{topList}}
+ㅇ 조치 : KLID에 해당 여부·패치 일정 확인 요청, 정식 패치 전 항목은 임시 조치 적용 요청
+ㅇ 향후 : 회신 결과에 따라 패치 완료 여부 점검·보고`,
+  },
+];
+
+// 외부 위협(해킹 비상) 대응 문서 — only: 해당 시나리오에서만 표시
+window.THREAT_TEMPLATES = [
+  {
+    id: 'klidAuth', only: true, name: 'KLID 긴급 확인 요청', to: '한국지역정보개발원(KLID)',
+    body:
+`[긴급 확인 요청] 위택스 로그인 실패 급증(계정 대입 공격 의심) 관련
+ㅇ 감지 시각 : {{detected}}
+ㅇ 요청사항
+ 1. 로그인 실패 급증 원인 분석(접속 IP·국가, 시도 계정 수, 성공 로그인 여부)
+ 2. 의심 IP 차단 및 로그인 시도 횟수 제한·추가 인증 적용 여부
+ 3. 성공한 비정상 로그인이 있으면 해당 계정의 조회·출력 이력과 개인정보 열람 여부
+ 4. 세무대리인·연계기관 등 외부 접속 서비스(위성 시스템) 동일 징후 여부
+ 5. 공개된 공격 도구 탐지규칙(Sigma·Suricata 등) 보안관제 반영 여부
+ㅇ 회신 : 1차 1시간 이내, 이후 2시간 간격 SNS 장애 공유방`,
+  },
+  {
+    id: 'smishing', only: true, name: '사칭 문자 주의 안내', to: '국민(위택스 공지) · 지방정부',
+    body:
+`[주의] 위택스·지방세 환급을 사칭한 문자에 주의하세요
+최근 금융권 개인정보 유출에 따라, 지방세 환급·체납 안내를 사칭한 문자메시지가 늘어날 수 있습니다.
+• 행정안전부와 지방자치단체는 문자로 인터넷 주소(URL) 접속이나 앱 설치를 요구하지 않습니다.
+• 환급금은 위택스(www.wetax.go.kr) 또는 스마트위택스 앱에서 직접 확인하세요.
+• 의심 문자는 열지 말고 118(한국인터넷진흥원)에 신고해 주세요.`,
+  },
+  {
+    id: 'breachReport', only: true, name: '상황 보고', to: '국장 · 실장 · 차관실 · 장관실',
+    body:
+`위택스 로그인 이상 징후(계정 대입 공격 의심) 상황을 보고드립니다.
+ㅇ 감지 : {{detected}}, 로그인 실패 평소 대비 급증, 해외 다수 IP에서 계정 바꿔 가며 시도
+ㅇ 서비스 : 정상 운영 / 개인정보 유출 여부 KLID 확인 중
+ㅇ 조치사항 : 의심 IP 차단·시도 횟수 제한 요청, 위성 시스템 동일 징후 점검, 사칭 문자 주의 안내 준비
+ㅇ 유출 확인 시 : 개인정보 보호법에 따라 72시간 이내({{deadline72}}까지) 정보주체 통지 및 신고 — 개인정보 보호 책임자 협의
+ㅇ 점검 진행 : {{done}}/{{total}}개 항목 완료`,
+  },
+  {
+    id: 'vendorReq', name: '업체 조치 요청(PHP)', to: '제작·호스팅 업체 · KLID',
+    body:
+`[조치 요청] PHP 보안 취약점 관련
+ㅇ 요청사항
+ 1. KISA 보호나라 공지를 참고해 PHP 취약점을 조치하고, 10월 20일 이후 흔적 점검 결과를 알려 주세요.
+ 2. PHP 버전과 조치 여부 회신 — 안전 버전: 8.5.12 · 8.4.27 · 8.3.36 · 8.2.35 이상(8.2는 12.31. 지원 종료 예정 → 8.3 이상 권장)
+ 3. "조치 완료" 회신 시 확인 : ✔적용 버전 ✔재시작 여부 ✔추가 보안 설정
+ 4. 8.1 이하는 업데이트가 없으므로 8.3 이상 전환 일정과, 전환 전까지의 임시 조치(서비스 중지 등)
+ 5. 업데이트 작업은 백업과 사전 테스트 후 진행(작업 중 장애 방지)
+ㅇ 대상 : 외부 접속 서비스, 관리자 페이지, 안 쓰는 옛 홈페이지, PHP 탑재 장비 포함
+ㅇ 회신 : 금일 {{replyBy}}까지`,
+  },
+  {
+    id: 'check', name: 'KLID 점검 요청', to: '한국지역정보개발원(KLID)',
+    body:
+`[긴급 점검 요청] {{threat}} 관련
+ㅇ 요청사항
+ 1. 지방세정보시스템(표준지방세·위택스) 및 연계 시스템의 해당 소프트웨어 사용 여부·버전 확인
+ 2. 사용 시 보안 패치 적용 계획(일시) 및 적용 전 임시 조치 방안
+ 3. 보안관제 강화 현황 및 이상 징후 탐지 결과
+ 4. 선제적 서비스 중단 필요 여부에 대한 의견
+ㅇ 회신 : 금일 {{replyBy}}까지 SNS 장애 공유방 및 공문`,
+  },
+  {
+    id: 'stopNotice', name: '선제 중단 사전 공지', to: '국민(위택스) · 지방정부',
+    body:
+`[안내] 보안 점검에 따른 위택스 서비스 일시 중단
+전 세계적으로 발생한 웹 소프트웨어 보안 취약점에 선제적으로 대응하기 위해 아래와 같이 서비스를 일시 중단합니다.
+• 중단 일시 : {{stopFrom}} ~ {{stopTo}}(예정)
+• 중단 서비스 : 위택스 지방세 신고·납부·제증명 발급
+• 납부기한 : 중단 기간 중 기한이 도래하는 지방세는 {{extendTo}}까지 연장(가산세 없음)
+• 긴급한 신고·납부는 관할 지방자치단체 세무부서 방문 처리
+국민 여러분의 정보를 안전하게 지키기 위한 조치이오니 양해 부탁드립니다.`,
+  },
+  {
+    id: 'threatReport', name: '상황 보고', to: '국장 · 실장 · 차관실 · 장관실',
+    body:
+`{{threat}} 관련 지방세정보시스템 점검 상황을 보고드립니다.
+ㅇ 외부 상황 : 민간 분야 사이버위기경보 ‘주의’ 격상(10.22. 12:00, 과기정통부·KISA), 해외 정부기관 웹사이트 선제 중단
+ㅇ 우리 시스템 : 영향 여부 KLID 확인 중 / 점검 진행 {{done}}/{{total}}개 항목 완료
+ㅇ 조치사항 : KLID 점검 요청, 보안관제 강화 요청, 선제 중단 대비 안내문·기한연장안 준비 완료
+ㅇ 향후 계획 : 점검 결과에 따라 선제 중단 여부 결정·보고`,
+  },
+];
+
+</script>
+<script>
+/*
+ * 상황판 시연용 시나리오 — 모든 수치는 가상 값입니다.
+ * 실제 도입 시 모니터링 도구(JENNIFER5) 지표로 대체합니다.
+ */
+window.SCENARIOS = {
+  normal: {
+    tab: '평상시',
+    asof: '평일 오전 10:20 기준 · 가상 데이터',
+    level: 'ok', title: '모든 지방세 서비스 정상 운영 중',
+    text: '국민용 위택스와 공무원용 세무행정 시스템 모두 평소 수준으로 처리되고 있습니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '신고·납부·증명서 발급', level: 'ok', curve: 'pub',
+        say: '접속과 처리가 원활합니다. 느린 요청이 거의 없습니다.',
+        k: [['지금 이용자', '840명', '평소와 비슷'], ['1초 처리량', '540건', '평소의 98%'], ['느린 요청', '0%', '3초 이상']] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'ok', curve: 'int',
+        say: '처리 중인 요청이 모두 빠르게 끝나고 있습니다.',
+        k: [['지금 이용자', '2,700명', '평소와 비슷'], ['1초 처리량', '700건', '평소의 101%'], ['오래 멈춘 요청', '2%', '60초 이상']] },
+    ],
+    tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['압류 해제', 'ok'], ['국세·등기 연계', 'ok'], ['환급', 'ok']],
+  },
+  now: {
+    tab: '처리 지연 주의',
+    asof: '처리 지연 상황 시연 · 가상 데이터',
+    level: 'warn', title: '주의 — 공무원용 시스템 일부 처리 지연',
+    text: '국민 이용(위택스)은 정상입니다. 공무원용 시스템에서 60초 넘게 끝나지 않는 요청이 늘어 추이를 지켜보고 있습니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '신고·납부·증명서 발급', level: 'ok', curve: 'pub',
+        say: '처리 중인 요청 10건이 모두 3초 안에 끝나고 있습니다.',
+        k: [['지금 이용자', '802명', '오늘 최고 869명'], ['1초 처리량', '475건', '오늘 최고 556건'], ['느린 요청', '0%', '3초 이상']] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'warn', curve: 'int',
+        say: '처리 중인 82건 중 25건(30%)이 60초 넘게 멈춰 있습니다. 서버 여유는 충분해 DB 대기나 무거운 조회가 원인일 가능성이 큽니다.',
+        k: [['지금 이용자', '2,552명', '오늘 최고 2,889명'], ['1초 처리량', '581건', '최근 최고 618건'], ['오래 멈춘 요청', '30%', '기준 20% 초과']], kc: ['ok', 'ok', 'warn'] },
+    ],
+    tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['압류 해제', 'ok'], ['국세·등기 연계', 'ok'], ['공무원 업무 처리', 'warn', '일부 지연']],
+  },
+  threat: {
+    tab: '외부 위협',
+    asof: '외부 위협(해킹 비상) 상황 시연 · 가상 데이터',
+    level: 'threat', title: '외부 위협 주의 — 웹 소프트웨어 치명적 보안 취약점',
+    text: '지방세시스템은 정상 운영 중입니다. 세계 각국 정부 사이트가 선제 중단에 들어가 우리 시스템 영향 여부를 사전 점검하고 있습니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '신고·납부·증명서 발급', level: 'ok', curve: 'pub',
+        say: '서비스는 정상입니다. 외부 접속 시도 증가에 대비해 보안관제 강화를 요청했습니다.',
+        k: [['지금 이용자', '910명', '평소와 비슷'], ['1초 처리량', '552건', '평소의 100%'], ['느린 요청', '0%', '3초 이상']] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'ok', curve: 'int',
+        say: '내부 업무는 정상 처리 중입니다. 연계 시스템 점검 결과를 기다리고 있습니다.',
+        k: [['지금 이용자', '2,640명', '평소와 비슷'], ['1초 처리량', '690건', '평소의 99%'], ['오래 멈춘 요청', '3%', '60초 이상']] },
+    ],
+    tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['압류 해제', 'ok'], ['국세·등기 연계', 'ok'], ['외부 위협 경보', 'threat', '주의 · 점검 중']],
+    threat: {
+      name: 'PHP 치명적 보안 취약점(CVSS 9.2) 공개',
+      facts: [
+        '로그인 전 단계에서도 서버를 장악할 수 있는 결함 — 10.21. 2건에 이어 10.24. 신규 1건(총 3건)',
+        '공격 시도 평소 수천 건 → 수백만 건(클라우드플레어)',
+        '민간 분야 사이버위기경보 ‘주의’ 격상(10.22. 12:00, 과기정통부·KISA)',
+        '네덜란드·벨기에·핀란드 등 정부 웹사이트 선제 중단',
+        '업데이트 후 재시작해야 적용되고, 웹방화벽만으로는 불완전(과기정통부·KISA FAQ)',
+      ],
+      checklist: [
+        'KLID에 해당 소프트웨어 사용 여부·버전 확인 요청',
+        '패치 적용 계획과 조치 완료 확인 3가지(적용 버전·재시작·보안 설정)',
+        '보안관제 강화, 10.20. 이후 흔적 점검 결과 확인',
+        '연계 시스템(정부24·금융결제원·지자체) 영향 확인',
+        '비상연락망·SNS 장애 공유방 점검',
+        '선제 중단 대비 사전 공지문·기한연장안 준비',
+      ],
+      docs: ['check', 'vendorReq', 'stopNotice', 'threatReport'],
+    },
+  },
+  breach: {
+    tab: '계정 공격 의심',
+    asof: '외부 위협(계정 대입 공격) 상황 시연 · 가상 데이터',
+    level: 'threat', title: '외부 위협 주의 — 위택스 로그인 실패 급증',
+    text: '서비스는 정상입니다. 금융권 연쇄 해킹과 같은 방식의 계정 대입 공격 징후가 보여 접속 통제를 강화하고 있습니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '신고·납부·증명서 발급', level: 'threat', curve: 'pub',
+        say: '로그인 실패가 평소의 18배로 늘었습니다. 해외 IP 여러 곳에서 계정을 바꿔 가며 시도하고 있습니다.',
+        k: [['로그인 실패', '18배', '평소 같은 시간 대비'], ['시도 IP 국가', '9개국', '최근 1시간'], ['느린 요청', '1%', '3초 이상']], kc: ['threat', 'threat', 'ok'] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'ok', curve: 'int',
+        say: '내부 업무는 정상입니다. 비정상 대량 조회는 아직 발견되지 않았습니다.',
+        k: [['지금 이용자', '2,610명', '평소와 비슷'], ['1초 처리량', '684건', '평소의 98%'], ['오래 멈춘 요청', '2%', '60초 이상']] },
+    ],
+    tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['위택스 로그인', 'threat', '실패 급증'], ['국세·등기 연계', 'ok'], ['위성 시스템 점검', 'warn', '3곳 확인 필요']],
+    threat: {
+      name: '계정 대입 공격 징후(크리덴셜 스터핑)',
+      facts: [
+        '유출된 아이디·비밀번호를 자동으로 대입하는 공격 — AI 도구로 속도와 범위가 커짐',
+        '2026.10. 금융사 16곳 침해, 개인정보 약 10만 건 유출(금융위원회) — 공격 도구 ‘아르텍스(ARTEX)’ 한국어판까지 공개',
+        '뚫린 곳은 핵심망이 아닌 인증이 약한 ‘위성 시스템’(대출모집인 페이지, 직원용 업무 시스템)',
+        '막아낸 곳의 공통점: 다중 인증·접속 통제, 비주요 자산까지 AI 상시 점검',
+      ],
+      checklist: [
+        '의심 IP 차단·로그인 시도 횟수 제한 요청(KLID)',
+        '성공한 비정상 로그인과 개인정보 조회 이력 확인',
+        '위성 시스템(세무대리인·연계·민간앱) 동일 징후 점검',
+        '외부에 열린 서비스 목록(자산 대장) 누락 확인',
+        '다중 인증 미적용 서비스의 임시 강화 조치',
+        '공개 탐지규칙의 보안관제 반영 여부 확인',
+        '개인정보 보호 책임자와 유출 시 통지·신고 절차 점검(침해사고: KISA 118·보호나라, 유출: 개인정보보호위원회)',
+        '사칭 문자 주의 안내문 준비(위택스·지자체)',
+        '침입 확인 시: 서버는 끄지 말고 외부 접속만 차단(흔적 보존)',
+      ],
+      docs: ['klidAuth', 'smishing', 'breachReport'],
+      breach: { detected: '2026-11-05T14:20' },
+      // [서비스, 이용자, 로그인 방식, 최근 점검, 상태(ok/warn/bad), 상태 설명] — 가상 예시
+      assets: [
+        ['위택스(PC)', '국민', '공동·간편 인증', '10.20.', 'ok'],
+        ['스마트위택스(모바일)', '국민', '간편 인증', '10.20.', 'ok'],
+        ['세무대리인 대행 서비스', '세무대리인', '인증서', '8.12.', 'warn', '점검 2개월 경과'],
+        ['전자고지·간편납부 연계', '연계기관', '기관 인증', '10.02.', 'ok'],
+        ['민간앱 환급 조회 연계', '민간 사업자', '연계 키', '9.30.', 'warn', '접속 통제 확인'],
+        ['지자체 세정 안내 페이지', '지자체', '확인 안 됨', '—', 'bad'],
+      ],
+    },
+  },
+  region: {
+    tab: '지역 접속 불량',
+    asof: '일부 지자체 접속 지연 상황 시연 · 가상 데이터',
+    level: 'warn', title: '주의 — 일부 지자체 접속 지연, 원인 분리 중',
+    text: '위택스·세무행정 중앙 서버는 정상입니다. 한 권역의 몇몇 지자체에서 프로그램 접속이 느리다는 신고가 들어와 원인을 가르고 있습니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '신고·납부·증명서 발급', level: 'ok', curve: 'pub',
+        say: '중앙 서버는 평소 수준으로 처리하고 있습니다. 느린 요청이 거의 없습니다.',
+        k: [['지금 이용자', '826명', '평소와 비슷'], ['1초 처리량', '531건', '평소의 97%'], ['느린 요청', '0%', '3초 이상']] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'ok', curve: 'int',
+        say: '중앙에서 보는 처리 속도는 정상입니다. 접속 지연은 일부 지자체 쪽에서만 신고되었습니다.',
+        k: [['지금 이용자', '2,480명', '평소보다 약간 적음'], ['1초 처리량', '668건', '평소의 95%'], ['오래 멈춘 요청', '3%', '60초 이상']] },
+    ],
+    tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['압류 해제', 'ok'], ['국세·등기 연계', 'ok'], ['일부 지자체 접속', 'warn', '4곳 신고 · 확인 중']],
+    region: {
+      now: '2026-11-06T11:30',
+      // [지자체, 최초 접수, 증상, 상태(ok 정상 / warn 확인·처리 중), 상태 설명, 반복 여부] — 가상 예시
+      reports: [
+        ['A군', '2026-11-06T09:15', '프로그램 접속 안 됨', 'warn', '지자체 처리 중', true],
+        ['B군', '2026-11-06T09:15', '프로그램 접속 안 됨', 'ok', '정상 확인', false],
+        ['C군', '2026-11-06T09:15', '프로그램 접속 안 됨', 'warn', '접속 확인 중', true],
+        ['D시', '2026-11-06T09:30', '로딩이 오래 걸림', 'warn', '네트워크 점검 요청', false],
+      ],
+      priorNote: '3일 전(11.3.)에도 같은 권역 2곳(A군·C군)에서 로딩 지연 신고가 있었습니다.',
+      defaults: { central: true, others: true, sameArea: true },
+    },
+  },
+  out: {
+    tab: '장애 상황',
+    asof: '장애 상황 시연 · 가상 데이터',
+    level: 'bad', title: '장애 — 지방세 신고·납부·증명서 발급 불가',
+    text: '전국(서울 제외) 위택스와 지자체 창구에서 지방세 업무가 중단되었습니다. 유형1 비상대응 대상입니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '신고·납부·증명서 발급', level: 'bad', curve: 'pubOut',
+        say: '접속은 되지만 요청이 처리되지 않습니다. Sorry page 게시가 필요합니다.',
+        k: [['지금 이용자', '1,960명', '평소의 2.3배(재접속 몰림)'], ['1초 처리량', '12건', '평소의 2%'], ['느린 요청', '91%', '3초 이상']], kc: ['warn', 'bad', 'bad'] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'bad', curve: 'intOut',
+        say: '데이터 처리량이 급증해 대부분의 요청이 멈춰 있습니다.',
+        k: [['지금 이용자', '2,940명', '평소와 비슷'], ['1초 처리량', '20건', '평소의 3%'], ['오래 멈춘 요청', '88%', '60초 이상']], kc: ['ok', 'bad', 'bad'] },
+    ],
+    tiles: [['지방세 신고', 'bad', '이용 불가'], ['지방세 납부', 'warn', '일부 재개'], ['증명서 발급', 'bad', '이용 불가'], ['압류 해제', 'bad', '이용 불가'], ['국세·등기 연계', 'bad', '이용 불가'], ['환급', 'bad', '이용 불가']],
+    // 이 시나리오는 '장애 접수' 화면에 아래 값을 채워 골든타임을 보여줍니다
+    incident: { start: '2026-11-04T09:00', services: ['acq', 'pay', 'cert', 'seize', 'family', 'refund'], scope: 'national', full: true, cause: 'internal', media: true, elapsed: 35 },
+  },
+};
+
+</script>
+<script>
+/*
+ * 판정 엔진 — 화면과 분리된 순수 계산 함수 모음
+ * (브라우저에서는 window.Engine, Node에서는 require로 사용 → tools/test.js로 검증)
+ */
+(function (root) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const hm = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const WD = ['일', '월', '화', '수', '목', '금', '토'];
+  const fullText = (d) => `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}.(${WD[d.getDay()]}) ${hm(d)}`;
+  const addMin = (d, m) => new Date(d.getTime() + m * 60000);
+
+  function isHoliday(d, holidays, rules) {
+    const day = d.getDay();
+    if (day === 0 || day === 6) return true;
+    if (holidays.has(ymd(d))) return true;
+    const ld = rules.deadline.laborDay;
+    return d.getMonth() + 1 === ld.month && d.getDate() === ld.day;
+  }
+  const isWeekday = (d, holidays) => d.getDay() !== 0 && d.getDay() !== 6 && !holidays.has(ymd(d));
+  const within = (d, h) => d.getHours() >= h.start && d.getHours() < h.end;
+
+  function nextBizMorning(d, holidays) {
+    const n = new Date(d); n.setHours(9, 0, 0, 0);
+    if (n <= d) n.setDate(n.getDate() + 1);
+    while (!isWeekday(n, holidays)) n.setDate(n.getDate() + 1);
+    return n;
+  }
+
+  /**
+   * 장애 판정
+   * input = { start: Date, services: [id], scope: id, full: bool, cause: id, media: bool }
+   */
+  function classify(input, rules, holidayList = []) {
+    const holidays = new Set(holidayList);
+    const svc = rules.services.filter((s) => input.services.includes(s.id));
+    const has = (cat) => svc.some((s) => s.cat === cat);
+    const critical = has('critical'), pub = critical || has('public');
+    const d = input.start;
+    const bizDay = isWeekday(d, holidays);
+    const inBiz = bizDay && within(d, rules.businessHours);
+
+    // 유형
+    let type, why;
+    if (!svc.length) { type = null; why = '안 되는 서비스를 하나 이상 고르세요.'; }
+    else if (!inBiz) { type = 3; why = '업무시간 외 발생'; }
+    else if (critical) { type = 1; why = '업무시간 내 중요 대민서비스 장애'; }
+    else if (pub) { type = 2; why = '업무시간 내 기타 대민서비스 장애'; }
+    else { type = 3; why = '내부 업무만 영향'; }
+
+    // 장애등급(보정: 최대 2개 등급 하향)
+    const notes = [];
+    let down = 0;
+    const gh = pub ? rules.gradeHours.public : rules.gradeHours.internal;
+    if (!(bizDay && within(d, gh))) { down += 1; notes.push(`발생시간 보정(${pub ? '대국민 평일 09~21시' : '내부 평일 09~18시'} 외) −1`); }
+    const sc = rules.scopes.find((s) => s.id === input.scope) || rules.scopes[0];
+    if (sc.gradeDown) { down += sc.gradeDown; notes.push(`지역 보정(${sc.name}) −${sc.gradeDown}`); }
+    down = Math.min(2, down);
+    const grade = rules.system.baseGrade + down;
+
+    // 비상대응
+    let emergency = type ? rules.types[type].emergency : '';
+    let escalateAt = null;
+    if (type === 2) {
+      const eod = new Date(d); eod.setHours(rules.type2Escalation.endOfDay, 0, 0, 0);
+      const fourH = addMin(d, rules.type2Escalation.hours * 60);
+      if (input.media) emergency = '언론 대응 필요 → 세제국 비상대응체계 즉시 가동';
+      else if (fourH >= eod) emergency = '18시 임박 발생 → 세제국 비상대응체계 즉시 가동';
+      else { escalateAt = fourH; emergency += ` → ${hm(fourH)}까지 미복구 시 비상대응체계 가동`; }
+    }
+    const afterHoursCritical = type === 3 && !inBiz && critical;
+    const recheckAt = afterHoursCritical ? nextBizMorning(d, holidays) : null;
+    if (afterHoursCritical) emergency += ` (다음 평일 ${fullText(recheckAt)}까지 미복구 시 유형1로 재판정)`;
+
+    const notice = input.full
+      ? ['즉시: 위택스 Sorry page', '30분 지속 시: 1시간 이내 기자단 문자', '필요시: 보도자료(기한연장)']
+      : ['즉시: 위택스 공지사항·서비스별 팝업', '필요시: 보도자료(기한연장)'];
+
+    const extra = [];
+    if (input.cause === 'cyber') extra.push('사이버침해 의심: 디지털보안정책과 즉시 공유, 침해사고 신고(KISA 118·보호나라), 서버는 끄지 말고 외부 접속만 차단해 흔적 보존');
+    if (input.cause === 'link') extra.push('연계 장애: 해당 연계기관에 원인·복구 예상시간 확인, 대체 처리 방법 안내');
+
+    return {
+      type, why, grade, gradeNotes: notes, emergency, escalateAt, recheckAt,
+      report: type ? rules.types[type].report : '', notice, extra,
+      critical, pub, inBiz, services: svc,
+    };
+  }
+
+  /** 골든타임 타임라인 — 해당 조건의 단계만 골라 시각을 붙임 */
+  function timeline(input, result, rules) {
+    if (!result.type) return [];
+    const t = result.type, d = input.start;
+    const ok = (w) => ({
+      t12: t === 1 || t === 2, t1: t === 1, t2: t === 2, t3: t === 3,
+      full: input.full && t !== 3, partial: !input.full && t !== 3,
+      g1: result.grade === 1 && t !== 3, cyber: input.cause === 'cyber',
+      afterHoursCritical: !!result.recheckAt,
+    })[w];
+    const out = [];
+    for (const s of rules.timeline) {
+      if (!ok(s.when)) continue;
+      let when;
+      if (s.at === 'nextBiz') when = result.recheckAt;
+      else if (s.clock != null) { when = new Date(d); when.setHours(s.clock, 0, 0, 0); if (when <= d) continue; }
+      else when = addMin(d, s.at);
+      out.push({ when, label: s.label, task: s.task, offset: Math.round((when - d) / 60000) });
+    }
+    return out.sort((a, b) => a.when - b.when);
+  }
+
+  /**
+   * 기한 특례 계산(지방세기본법 §24)
+   * ② 장애로 전자신고·납부를 못 한 경우 → 복구되어 할 수 있게 된 날의 다음 날
+   * ① 그 날이 공휴일·토요일·근로자의 날이면 → 그 다음 날
+   */
+  function deadline(recovered, rules, holidayList = []) {
+    const holidays = new Set(holidayList);
+    const steps = [];
+    const d = new Date(recovered); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1);
+    steps.push(`§24② 복구일(${ymd(recovered)})의 다음 날 → ${ymd(d)}`);
+    while (isHoliday(d, holidays, rules)) {
+      const why = d.getDay() === 0 ? '일요일' : d.getDay() === 6 ? '토요일' : holidays.has(ymd(d)) ? '공휴일' : '근로자의 날';
+      d.setDate(d.getDate() + 1);
+      steps.push(`§24① ${why} → ${ymd(d)}`);
+    }
+    return { date: d, text: fullText(d).slice(0, -6), steps };
+  }
+
+  /** 문서 틀 채우기 */
+  function fill(tpl, v) { return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => (v[k] ?? '')); }
+
+  /**
+   * 일부 지자체 접속 불량 — 원인 분리
+   * a = { central: 중앙 지표 정상(bool), others: 다른 시스템도 느림(bool), sameArea: 한 권역(bool), count: 신고 지자체 수 }
+   */
+  function diagnoseRegion(a, rules) {
+    const r = rules.region;
+    const cause = !a.central ? 'central' : a.others ? (a.sameArea ? 'area' : 'local') : 'client';
+    const escalate = cause === 'central' || a.count >= r.escalateCount;
+    const escalateWhy = cause === 'central' ? '중앙 지표 이상' : a.count >= r.escalateCount ? `${a.count}곳 동시 신고(기준 ${r.escalateCount}곳)` : '';
+    return { cause, ...r.causes[cause], escalate, escalateWhy };
+  }
+
+  /** 버전 비교: '8u511', '11.0.33', '8.3.36' 모두 숫자 조각으로 비교 */
+  const vparts = (v) => (String(v).match(/\d+/g) || []).map(Number);
+  function vcmp(a, b) {
+    const x = vparts(a), y = vparts(b);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0 ? -1 : 1; }
+    return 0;
+  }
+
+  /**
+   * 권고문 ↔ 자산 대조
+   * adv = { product, mode: 'fixed'|'upTo'|'temp'|'noDetail', lines:[{line, fixed|upTo}], supported:[...] }, item = { sw, version }
+   * 반환: null(관계 없음) 또는 { hit: 'yes'|'check'|'no', why }
+   */
+  function matchAdvisory(adv, item) {
+    if (adv.product !== item.sw) return null;
+    if (!item.version) return { hit: 'check', why: '버전 미확인 — 먼저 확인 필요' };
+    if (adv.mode === 'temp') return { hit: 'yes', why: '정식 패치 전 — 임시 조치 적용 필요' };
+    if (adv.mode === 'noDetail') return { hit: 'check', why: '권고문 본문 확인 필요(영향 버전 미확인)' };
+    const p = vparts(item.version);
+    if (adv.mode === 'fixed') {
+      const key = p[0] + '.' + p[1];
+      const row = adv.lines.find((l) => l.line === key);
+      if (!row) return vcmp(item.version, adv.lines[0].line) < 0 ? { hit: 'yes', why: '지원 종료 버전 — 지원 중인 버전으로 업그레이드' } : { hit: 'check', why: '권고문에 없는 버전 — 확인 필요' };
+      return vcmp(item.version, row.fixed) < 0 ? { hit: 'yes', why: `${row.fixed} 이상으로 업데이트 필요` } : { hit: 'no', why: `${row.fixed} 이상 — 해결 버전${row.sunset ? ', ' + row.sunset : ''}` };
+    }
+    if (adv.mode === 'upTo') {
+      const row = adv.lines.find((l) => l.line === String(p[0]));
+      if (!row) return { hit: 'check', why: '권고문에 없는 버전 — 확인 필요' };
+      return vcmp(item.version, row.upTo) <= 0 ? { hit: 'yes', why: `영향 버전(${row.upTo}) 이하 — 최신 보안 패치 적용 필요` } : { hit: 'no', why: `영향 버전(${row.upTo})보다 높음 — 패치 반영 여부 확인(TODO)` };
+    }
+    return null;
+  }
+
+  const api = { classify, timeline, deadline, fill, fullText, hm, ymd, addMin, diagnoseRegion, vcmp, matchAdvisory };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* 화면 동작 — 판정 계산은 engine.js, 기준값은 data/*.js 에 있습니다. */
+(function () {
+  const R = window.RULES, E = window.Engine, S = window.SCENARIOS;
+  const $ = (id) => document.getElementById(id);
+  const LABEL = { ok: '정상', warn: '주의', bad: '장애', threat: '외부 위협' };
+  const ICON = { ok: '●', warn: '▲', bad: '■', threat: '◆' };
+  const TILE_TXT = { ok: '정상', warn: '지연', bad: '이용 불가', threat: '주의' };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const store = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+  // ── 공휴일: 서버(API)가 있으면 사용, 없으면 임시 데이터 ──
+  const holidayCache = {};
+  function holidays(year) { return holidayCache[year] || (window.HOLIDAYS_FALLBACK[year] || []); }
+  async function loadHolidays(year) {
+    if (holidayCache[year] || !location.protocol.startsWith('http')) return;
+    try {
+      const r = await fetch(`/api/holidays?year=${year}`);
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      if (Array.isArray(j.dates) && j.source === 'api') { holidayCache[year] = j.dates; $('holidaySrc').textContent = '한국천문연구원 특일정보 API'; }
+    } catch (e) { /* 임시 데이터 유지 */ }
+  }
+  const hol = (d) => holidays(d.getFullYear()).concat(holidays(d.getFullYear() + 1));
+
+  // ── 공통: 이용자 추이 스파크라인(가상) ──
+  function curve(kind) {
+    const pts = [];
+    for (let h = 0; h <= 15.17; h += 0.25) {
+      const am = Math.exp(-((h - 10.3) ** 2) / 2.2), pm = Math.exp(-((h - 14.8) ** 2) / 3);
+      let v = 0.04 + 0.9 * Math.max(am, pm * 0.97) - (h > 12 && h < 13.2 ? 0.25 * Math.sin((h - 12) / 1.2 * Math.PI) : 0);
+      if (kind.endsWith('Out') && h >= 9) v = h < 9.5 ? v * 1.6 : v * (kind === 'pubOut' ? 1.9 : 1.05);
+      pts.push([h, Math.min(Math.max(v, 0.02), 1.15)]);
+    }
+    return pts;
+  }
+  function spark(kind, level) {
+    const W = 420, H = 90, L = 8, Rr = 8, T = 8, B = 18, x = (h) => L + (W - L - Rr) * h / 24, y = (v) => T + (H - T - B) * (1 - v / 1.2);
+    const p = curve(kind), line = p.map((q, i) => (i ? 'L' : 'M') + x(q[0]).toFixed(1) + ' ' + y(q[1]).toFixed(1)).join(' ');
+    const last = p[p.length - 1], col = `var(--${level === 'ok' ? 'accent' : level})`;
+    const grid = [0, 6, 12, 18, 24].map((h) => `<line x1="${x(h)}" x2="${x(h)}" y1="${T}" y2="${H - B}" stroke="var(--line)"/><text x="${x(h)}" y="${H - 4}" font-size="10" fill="var(--muted)" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}시</text>`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="오늘 이용자 추이">${grid}<path d="${line} L ${x(last[0])} ${y(0)} L ${x(0)} ${y(0)} Z" fill="${col}" opacity=".14"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2"/><circle cx="${x(last[0])}" cy="${y(last[1])}" r="4" fill="${col}"/></svg>`;
+  }
+
+  // ── 공통: 문서 탭 ──
+  function docsHTML(key, docs) {
+    return `<div class="docs" data-docs="${key}"><div class="doctabs" role="group" aria-label="자동 작성 문서">${docs.map((d, i) => `<button type="button" data-i="${i}" aria-pressed="${i === 0}">${esc(d.name)}</button>`).join('')}</div>
+      <div class="docbody"><div class="ptitle"><span class="who" data-to></span><button type="button" class="copy">복사</button></div><pre data-pre></pre></div></div>`;
+  }
+  // 문서 영역을 한 번만 연결하고, 이후에는 내용만 바꿈(중복 이벤트 방지)
+  function setDocs(root, key, docs) {
+    let box = root.querySelector('.docs');
+    if (!box._bound || box.querySelectorAll('.doctabs button').length !== docs.length) {
+      const cur = +(box.dataset.cur || 0);
+      box.outerHTML = docsHTML(key, docs);
+      box = root.querySelector('.docs'); box.dataset.cur = cur < docs.length ? cur : 0; box._bound = true;
+      box.querySelectorAll('.doctabs button').forEach((b) => b.addEventListener('click', () => { box.dataset.cur = b.dataset.i; paint(); }));
+      box.querySelector('.copy').addEventListener('click', async (e) => {
+        const pre = box.querySelector('[data-pre]');
+        try { await navigator.clipboard.writeText(pre.textContent); e.target.textContent = '복사됨'; }
+        catch (err) { const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); e.target.textContent = '선택됨 · Ctrl+C'; }
+        setTimeout(() => (e.target.textContent = '복사'), 1800);
+      });
+    }
+    box._docs = docs;
+    function paint() {
+      const i = +box.dataset.cur, d = box._docs[i];
+      box.querySelectorAll('.doctabs button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
+      box.querySelector('[data-to]').textContent = '받는 곳: ' + d.to;
+      box.querySelector('[data-pre]').textContent = d.text;
+    }
+    paint();
+  }
+
+  // ── 골든타임 패널(상황판·장애 접수 공용) ──
+  const CAUSE_PUBLIC = { unknown: '장애', internal: '시스템 오류', infra: '기반시설 장애', cyber: '보안 점검', link: '연계기관 시스템 장애' };
+  function docValues(input, res, elapsed) {
+    const svcNames = res.services.map((s) => s.name).join('·');
+    const actions = [`위택스 ${input.full ? 'Sorry page' : '공지·팝업'} 안내`, 'KLID 장애 공유방 가동', '지방정부 상황 전파'];
+    if (input.full && elapsed >= 30) actions.push('기자단 문자 전파');
+    if (res.type === 1 && elapsed >= 60) actions.push('세목별 대응 매뉴얼 시행');
+    const cause = R.causes.find((c) => c.id === input.cause);
+    return {
+      system: R.system.name, url: R.system.url, owner: R.system.owner, serverLocation: R.system.serverLocation,
+      grade: res.grade, typeName: R.types[res.type].name, typeDesc: res.why,
+      startText: E.fullText(input.start), startShort: E.fullText(input.start).slice(5), startClock: E.hm(input.start),
+      services: svcNames, impactShort: res.pub ? '위택스 대민서비스(' + svcNames + ')' : '내부 업무(' + svcNames + ')',
+      cause: input.cause === 'unknown' ? '확인 중' : cause.name, causePublic: CAUSE_PUBLIC[input.cause],
+      actions: actions.join(', '),
+      altGuide: res.critical ? '• 긴급한 경우 : 관할 지방자치단체 세무부서에서 처리\n' : '',
+    };
+  }
+  function renderGolden(el, input, startElapsed) {
+    const res = E.classify(input, R, hol(input.start));
+    if (!res.type) { el.hidden = true; return res; }
+    const steps = E.timeline(input, res, R);
+    const max = Math.max(780, ...steps.map((s) => s.offset + 30));
+    const tone = res.type === 1 ? 'bad' : res.type === 2 ? 'warn' : 'ok';
+    el.hidden = false;
+    el.className = 'panel s-' + tone;
+    el.innerHTML = `<div class="ptitle"><h3>골든타임 — 지금 해야 할 일</h3><span class="who">「장애발생 시 비상대응 매뉴얼」(2026.10.) 기준</span></div>
+      <div class="gt-head"><span class="badge">${R.types[res.type].name} · ${res.grade}등급 · ${input.full ? '전체 장애' : '일부 장애'}</span>
+        <span>경과 <span class="clock" data-clock>0:00</span></span>
+        <div class="slider"><label for="${el.id}-el">발생(${E.hm(input.start)}) 후 경과 시간을 움직여 보세요</label><input type="range" id="${el.id}-el" min="0" max="${max}" step="5" value="${Math.min(startElapsed, max)}"></div></div>
+      <ul class="steps" data-steps></ul>${docsHTML(el.id, [])}`;
+    const range = el.querySelector('input[type=range]');
+    const draw = () => {
+      const e = +range.value, fmt = (m) => Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+      el.querySelector('[data-clock]').textContent = fmt(e);
+      let nowIdx = -1; steps.forEach((s, i) => { if (e >= s.offset) nowIdx = i; });
+      const lastOffset = nowIdx >= 0 ? steps[nowIdx].offset : -1;
+      el.querySelector('[data-steps]').innerHTML = steps.map((s) => {
+        const cls = s.offset < lastOffset ? 'done' : s.offset === lastOffset ? 'now' : 'next';
+        const st = cls === 'done' ? '시점 지남' : cls === 'now' ? '지금 할 일' : `${fmt(s.offset - e)} 남음`;
+        return `<li class="${cls}"><span class="t">${E.hm(s.when)}<br><small>${esc(s.label)}</small></span><span>${esc(s.task)}</span><span class="st">${st}</span></li>`;
+      }).join('');
+      const v = docValues(input, res, e);
+      const docs = window.TEMPLATES.filter((t) => (t.id !== 'press' || input.full) && (t.id !== 'dsc' || res.type !== 3))
+        .map((t) => ({ name: t.name, to: t.to, text: E.fill(t.body, v) }));
+      setDocs(el, el.id, docs);
+    };
+    range.addEventListener('input', draw);
+    draw();
+    return res;
+  }
+
+  // ── 외부 위협 패널 ──
+  const threatState = {};
+  function renderThreat(sc) {
+    const el = $('threatPanel'), t = sc.threat;
+    const st = (threatState[sc.tab] = threatState[sc.tab] || {});
+    el.hidden = false;
+    const ASSET = { ok: '정상', warn: '점검 필요', bad: '목록 미등록' };
+    const assets = t.assets ? `<div style="margin-top:16px"><div class="ptitle"><b style="font-size:.9rem">위성 시스템 점검판 — 외부에 열린 서비스 전체</b><span class="who">가상 예시 · 실제 점검 결과 아님</span></div>
+      <div class="tbl"><table><thead><tr><th>서비스</th><th>이용자</th><th>로그인 방식</th><th>최근 점검</th><th>상태</th></tr></thead><tbody>
+      ${t.assets.map((a) => `<tr><td style="font-family:var(--font);color:var(--ink)">${esc(a[0])}</td><td>${esc(a[1])}</td><td>${esc(a[2])}</td><td>${esc(a[3])}</td><td><span class="pill s-${a[4] === 'bad' ? 'bad' : a[4]}">${ICON[a[4]]} ${esc(a[5] || ASSET[a[4]])}</span></td></tr>`).join('')}
+      </tbody></table></div></div>` : '';
+    let breachCard = '';
+    if (t.breach) {
+      const d0 = new Date(t.breach.detected), d72 = E.addMin(d0, 72 * 60);
+      breachCard = `<div class="facts-grid" style="margin-top:12px">
+        <div class="fact"><div class="l">이상 징후 감지</div><div class="v">${E.fullText(d0)}</div><small>로그인 실패 급증 경보</small></div>
+        <div class="fact" style="background:var(--bad-bg)"><div class="l">유출이 확인되면 — 통지·신고 골든타임 72시간</div><div class="v" style="color:var(--bad)">${E.fullText(d72)}까지</div><small>개인정보 보호법 §34 · 유출 인지 시점부터 기산(TODO 확인)</small></div></div>`;
+    }
+    el.innerHTML = `<div class="ptitle"><h3>외부 위협 — 사전 점검</h3><span class="pill">◆ ${esc(t.name)}</span></div>
+      <ul class="facts">${t.facts.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>${breachCard}
+      <div class="grid2" style="gap:14px;margin-top:12px"><div><b style="font-size:.9rem">점검 항목</b>
+        <div class="progress" aria-hidden="true"><i data-bar></i></div><div class="who" data-count></div>
+        <ul class="checks" style="margin-top:8px">${t.checklist.map((c, i) => `<li><label><input type="checkbox" id="chk-${i}" ${st[i] ? 'checked' : ''}><span>${esc(c)}</span></label></li>`).join('')}</ul></div>
+      <div><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('threat', [])}</div></div>${assets}`;
+    const draw = () => {
+      const done = t.checklist.filter((_, i) => st[i]).length;
+      el.querySelector('[data-bar]').style.width = (done / t.checklist.length * 100) + '%';
+      el.querySelector('[data-count]').textContent = `${done} / ${t.checklist.length} 완료`;
+      const stopTo = new Date('2026-10-23T06:00');
+      const v = { threat: t.name, replyBy: '18:00', stopFrom: '10.22.(목) 22:00', stopTo: '10.23.(금) 06:00',
+        extendTo: E.deadline(stopTo, R, hol(stopTo)).text, done, total: t.checklist.length,
+        detected: t.breach ? E.fullText(new Date(t.breach.detected)) : '',
+        deadline72: t.breach ? E.fullText(E.addMin(new Date(t.breach.detected), 72 * 60)) : '' };
+      const list = window.THREAT_TEMPLATES.filter((d) => (t.docs ? t.docs.includes(d.id) : !d.only));
+      setDocs(el, 'threat', list.map((d) => ({ name: d.name, to: d.to, text: E.fill(d.body, v) })));
+    };
+    t.checklist.forEach((_, i) => $('chk-' + i).addEventListener('change', (e) => { st[i] = e.target.checked; draw(); }));
+    draw();
+  }
+
+  // ── 일부 지자체 접속 불량: 접수 현황 + 원인 분리 3문항 + 문서 ──
+  const regionState = {};
+  function renderRegion(sc) {
+    const el = $('regionPanel'), g = sc.region, Q = R.region.questions;
+    const st = (regionState[sc.tab] = regionState[sc.tab] || { ...g.defaults });
+    const now = new Date(g.now);
+    const reps = g.reports.map((r) => ({ name: r[0], at: new Date(r[1]), symptom: r[2], lv: r[3], state: r[4], repeat: r[5] }));
+    const first = reps.reduce((a, r) => (r.at < a ? r.at : a), reps[0].at);
+    const mins = Math.round((now - first) / 60000), elapsed = `${Math.floor(mins / 60)}시간 ${mins % 60}분`;
+    const okCount = reps.filter((r) => r.lv === 'ok').length;
+    el.hidden = false;
+    el.innerHTML = `<div class="ptitle"><h3>일부 지자체 접속 불량 — 중앙 문제인가, 지자체 쪽인가?</h3><span class="pill">▲ 원인 분리 중</span></div>
+      <div class="facts-grid">
+        <div class="fact"><div class="l">최초 접수</div><div class="v">${E.hm(first)}</div><small>${reps.length}곳 신고</small></div>
+        <div class="fact"><div class="l">접수 후 경과</div><div class="v">${elapsed}</div><small>${E.hm(now)} 기준</small></div>
+        <div class="fact"><div class="l">정상 확인</div><div class="v">${okCount} / ${reps.length}곳</div><small>나머지는 확인·처리 중</small></div>
+        <div class="fact" style="background:var(--warn-bg)"><div class="l">반복 신고</div><div class="v">${reps.filter((r) => r.repeat).length}곳</div><small>${esc(g.priorNote)}</small></div>
+      </div>
+      <div class="tbl"><table><thead><tr><th>지자체</th><th>최초 접수</th><th>증상</th><th>상태</th></tr></thead><tbody>
+        ${reps.map((r) => `<tr><td style="font-family:var(--font);color:var(--ink)">${esc(r.name)}${r.repeat ? ' <small>↻ 반복</small>' : ''}</td><td>${E.hm(r.at)}</td><td style="font-family:var(--font)">${esc(r.symptom)}</td><td><span class="pill s-${r.lv}">${ICON[r.lv]} ${esc(r.state)}</span></td></tr>`).join('')}
+      </tbody></table></div>
+      <div class="grid2" style="gap:14px;margin-top:14px">
+        <div><b style="font-size:.9rem">원인 가르기 — 세 가지만 답하세요</b>
+          <div style="display:grid;gap:8px;margin-top:8px">${Q.map((q) => `<fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0"><legend style="font-size:.85rem;font-weight:600;padding:0 4px">${esc(q.q)}</legend>
+            <div class="hint">${esc(q.hint)}</div>
+            <div style="display:flex;gap:16px;margin-top:4px"><label class="opt"><input type="radio" name="rq-${q.id}" value="1" ${st[q.id] ? 'checked' : ''}><span>예</span></label><label class="opt"><input type="radio" name="rq-${q.id}" value="0" ${st[q.id] ? '' : 'checked'}><span>아니오</span></label></div></fieldset>`).join('')}</div>
+          <div id="regionVerdict" style="margin-top:10px"></div></div>
+        <div><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('region', [])}</div>
+      </div>`;
+    const draw = () => {
+      const d = E.diagnoseRegion({ ...st, count: reps.length }, R);
+      const left = R.region.escalateCount - reps.length;
+      const escText = d.escalate ? `격상 검토 — ${d.escalateWhy}. 장애 접수 화면에서 유형을 판정하세요.`
+        : `해당 없음 — 신고 ${reps.length}곳(기준 ${R.region.escalateCount}곳), 중앙 지표 정상. ${left}곳 더 늘거나 중앙 지표가 이상이면 격상 검토`;
+      el.querySelector('#regionVerdict').innerHTML = `<div class="warnbox" style="border-left-color:var(--${d.cause === 'central' ? 'bad' : 'warn'});background:var(--${d.cause === 'central' ? 'bad' : 'warn'}-bg)">
+        <b>판단: ${esc(d.name)}</b><br>연락할 곳: ${esc(d.who)}<br>${esc(d.action)}<br><small>${esc(escText)}</small>
+        ${d.escalate ? '<div style="margin-top:8px"><button type="button" class="tabs-go" id="regionGo">장애 접수 화면으로</button></div>' : ''}</div>`;
+      const go = el.querySelector('#regionGo'); if (go) go.addEventListener('click', () => show('intake'));
+      const v = { who: d.who, causeName: d.name, ask: d.ask, firstReport: E.hm(first), areas: reps.map((r) => r.name).join('·'), count: reps.length, elapsed,
+        centralText: st.central ? '정상' : '이상 징후', othersText: st.others ? '해당 지자체의 다른 시스템도 느림' : '다른 시스템은 정상',
+        okCount, pendingCount: reps.length - okCount, escalateText: escText };
+      setDocs(el, 'region', window.REGION_TEMPLATES.map((t) => ({ name: t.name, to: E.fill(t.to, v), text: E.fill(t.body, v) })));
+    };
+    Q.forEach((q) => el.querySelectorAll(`input[name="rq-${q.id}"]`).forEach((r) => r.addEventListener('change', (e) => { st[q.id] = e.target.value === '1'; draw(); })));
+    draw();
+  }
+
+  // ── 권고문 대조: 가상 자산 대장과 권고문 영향 버전을 비교 ──
+  const advState = { run: false };
+  const HIT = { yes: ['bad', '해당 가능'], check: ['warn', '확인 필요'], no: ['ok', '해당 없음'] };
+  function advRows() {
+    const rows = [];
+    window.ADVISORIES.forEach((a) => window.INVENTORY.forEach((it) => {
+      const m = E.matchAdvisory(a, { sw: it[2], version: it[3] });
+      if (m) rows.push({ a, it, m });
+    }));
+    const order = { yes: 0, check: 1, no: 2 };
+    return rows.sort((x, y) => order[x.m.hit] - order[y.m.hit]);
+  }
+  function renderAdvisory() {
+    const A = window.ADVISORIES, N = window.SW_NAME, rows = advRows();
+    // 시스템 단위 집계: 한 시스템에 여러 권고문이 걸리면 가장 심각한 판정 하나로 센다
+    const sysHit = {}; const rank = { yes: 0, check: 1, no: 2 };
+    rows.forEach((r) => { const k = r.it[0]; if (!(k in sysHit) || rank[r.m.hit] < rank[sysHit[k]]) sysHit[k] = r.m.hit; });
+    const cnt = (k) => Object.values(sysHit).filter((h) => h === k).length;
+    $('advMail').innerHTML = `<div class="tbl"><table><thead><tr><th>수신 권고문</th><th>출처 · 일자</th><th>핵심</th>${advState.run ? '<th>우리 시스템</th>' : ''}</tr></thead><tbody>
+      ${A.map((a) => { const mine = rows.filter((r) => r.a.id === a.id), y = mine.filter((r) => r.m.hit === 'yes').length, c = mine.filter((r) => r.m.hit === 'check').length;
+        return `<tr><td style="font-family:var(--font);color:var(--ink)">${esc(a.title)}</td><td>${esc(a.src)} · ${a.date}</td><td style="font-family:var(--font)">${esc(a.note)}</td>${advState.run ? `<td><span class="pill s-${y ? 'bad' : c ? 'warn' : 'ok'}">${y ? ICON.bad + ' 해당 가능 ' + y + '곳' : c ? ICON.warn + ' 확인 필요 ' + c + '곳' : ICON.ok + ' 해당 없음'}</span></td>` : ''}</tr>`; }).join('')}
+      </tbody></table></div>`;
+    const box = $('advResult'); box.hidden = !advState.run;
+    if (!advState.run) return;
+    const line = (r, i) => ` ${i + 1}. ${r.it[0]} — ${N[r.it[2]]} ${r.it[3] || '버전 미확인'} : ${r.a.title} → ${r.m.why}`;
+    const hits = rows.filter((r) => r.m.hit !== 'no');
+    const top = rows.filter((r) => r.m.hit === 'yes').slice(0, 3).map((r) => `${r.it[0]}(${N[r.it[2]]} ${r.it[3]})`);
+    box.innerHTML = `<div class="ptitle"><h3>대조 결과</h3><span class="who">권고문 ${A.length}건 × 소관 시스템 ${Object.keys(sysHit).length}곳</span></div>
+      <div class="facts-grid">
+        <div class="fact" style="background:var(--bad-bg)"><div class="l">${ICON.bad} 해당 가능 — 바로 조치</div><div class="v" style="color:var(--bad)">${cnt('yes')}곳</div></div>
+        <div class="fact" style="background:var(--warn-bg)"><div class="l">${ICON.warn} 확인 필요 — 버전·본문 확인</div><div class="v" style="color:var(--warn)">${cnt('check')}곳</div></div>
+        <div class="fact"><div class="l">${ICON.ok} 해당 없음</div><div class="v">${cnt('no')}곳</div></div></div>
+      <div class="tbl"><table><thead><tr><th>시스템</th><th>구분</th><th>소프트웨어 · 버전</th><th>권고문</th><th>판정</th><th>조치</th></tr></thead><tbody>
+        ${rows.map((r) => `<tr><td style="font-family:var(--font);color:var(--ink)">${esc(r.it[0])}</td><td>${esc(r.it[1])}</td><td>${N[r.it[2]]} ${esc(r.it[3] || '미확인')}</td><td style="font-family:var(--font)">${esc(r.a.title)}</td>
+          <td><span class="pill s-${HIT[r.m.hit][0]}">${ICON[HIT[r.m.hit][0]]} ${HIT[r.m.hit][1]}</span></td><td style="font-family:var(--font)">${esc(r.m.why)}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div style="margin-top:14px"><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('advisory', [])}</div>
+      <div class="hint" style="margin-top:10px">※ 자산 대장·버전은 가상 예시입니다. PHP 영향 버전은 KISA 안내(FAQ)와 일치함을 확인했고, Java 등은 공문에서 읽은 값이라 원문 확인이 필요합니다(TODO). 실제 도입 시 자산 대장을 연결하고, 영향 버전보다 높은 경우도 패치 반영 여부를 확인하세요.</div>`;
+    const v = { advCount: A.length, advList: A.map((a) => ` - ${a.title}(${a.src}, ${a.date})`).join('\n'), hitCount: hits.length, sysHit: cnt('yes') + cnt('check'), hitList: hits.map(line).join('\n'),
+      yesCount: cnt('yes'), checkCount: cnt('check'), noCount: cnt('no'), topList: top.length ? top.join(', ') : '해당 없음' };
+    setDocs(box, 'advisory', window.ADVISORY_TEMPLATES.map((t) => ({ name: t.name, to: t.to, text: E.fill(t.body, v) })));
+  }
+  function runAdvisory() {
+    advState.run = true; renderAdvisory();
+    // 시스템 단위로 집계(한 시스템에 여러 권고문이 걸리면 가장 심각한 판정 하나)
+    const rank = { yes: 0, check: 1, no: 2 }, sys = {};
+    advRows().forEach((r) => { const k = r.it[0]; if (!(k in sys) || rank[r.m.hit] < rank[sys[k]]) sys[k] = r.m.hit; });
+    const y = Object.keys(sys).filter((k) => sys[k] === 'yes'), c = Object.keys(sys).filter((k) => sys[k] === 'check').length;
+    raiseAlert(y.length ? 'urgent' : 'info', `권고문 대조 — 해당 가능 ${y.length}곳 · 확인 필요 ${c}곳`,
+      y.length ? `${y.slice(0, 2).join(', ')} 등 소관 시스템이 해당될 수 있습니다. KLID 확인 요청문을 준비했습니다.` : '해당 가능한 시스템이 없습니다.',
+      () => $('advResult').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+
+  // ── 상황판 ──
+  function renderBoard(key) {
+    const sc = S[key];
+    document.querySelectorAll('#scenarioTabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === key)));
+    $('asof').textContent = sc.asof; $('tvScenario').textContent = sc.tab;
+    $('verdict').className = 'verdict s-' + sc.level;
+    $('lamp').textContent = ICON[sc.level];
+    $('vTitle').textContent = sc.title;
+    $('vText').textContent = sc.text;
+    $('systems').innerHTML = sc.sys.map((y) => `<section class="panel s-${y.level}">
+      <div class="ptitle"><h3>${esc(y.name)}</h3><span class="pill">${ICON[y.level]} ${LABEL[y.level]}</span></div>
+      <div class="who">${esc(y.who)}</div><p class="say">${esc(y.say)}</p>
+      <div class="kpis">${y.k.map((k, i) => `<div class="kpi s-${(y.kc || [])[i] || y.level}"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="n">${k[2]}</div></div>`).join('')}</div>
+      <div class="spark">${spark(y.curve, y.level)}<div class="cap"><span>오늘 이용자 추이(가상)</span><span>● 현재</span></div></div></section>`).join('');
+    $('tiles').innerHTML = sc.tiles.map((t) => `<div class="tile s-${t[1]}"><b>${esc(t[0])}</b><span>${ICON[t[1]]} ${esc(t[2] || TILE_TXT[t[1]])}</span></div>`).join('');
+    $('threatPanel').hidden = !sc.threat; if (sc.threat) renderThreat(sc);
+    $('regionPanel').hidden = !sc.region; if (sc.region) renderRegion(sc);
+    if (sc.incident) { const i = sc.incident; renderGolden($('boardGolden'), { ...i, start: new Date(i.start) }, i.elapsed); }
+    else $('boardGolden').hidden = true;
+    store.set('gt-scenario', key);
+  }
+
+  // ── 장애 접수 ──
+  function buildForm() {
+    const cats = { critical: '중요 대민서비스', public: '기타 대민서비스', internal: '내부 업무' };
+    $('f-services').innerHTML = '<legend>안 되는 서비스</legend>' + Object.entries(cats).map(([c, n]) =>
+      `<div class="cat">${n}</div>` + R.services.filter((s) => s.cat === c).map((s) => `<label class="opt"><input type="checkbox" id="svc-${s.id}" value="${s.id}"><span>${esc(s.name)}</span></label>`).join('')).join('');
+    $('f-scope').innerHTML = R.scopes.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    $('f-cause').innerHTML = R.causes.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  }
+  const local = (d) => `${E.ymd(d)}T${E.hm(d)}`;
+  function readForm() {
+    const v = $('f-start').value; if (!v) return null;
+    return { start: new Date(v), services: R.services.filter((s) => $('svc-' + s.id).checked).map((s) => s.id),
+      scope: $('f-scope').value, cause: $('f-cause').value, full: $('f-full').checked, media: $('f-media').checked };
+  }
+  let sampleElapsed = null;
+  function renderIntake() {
+    const input = readForm();
+    if (!input || !input.services.length) {
+      lastType = null;
+      $('result').innerHTML = '<div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div>';
+      $('intakeGolden').hidden = true; return;
+    }
+    loadHolidays(input.start.getFullYear());
+    const since = Math.round((Date.now() - input.start) / 60000);
+    const res = renderGolden($('intakeGolden'), input, sampleElapsed ?? (since > 0 && since < 1440 ? since : 0));
+    const tone = res.type === 1 ? 'bad' : res.type === 2 ? 'warn' : 'ok';
+    $('result').className = 'panel';
+    intakeAlert(res);
+    $('result').innerHTML = `<div class="ptitle"><h3>판정 결과</h3><span class="pill s-${tone}">${R.types[res.type].name} · ${res.grade}등급</span></div>
+      <dl class="kv"><dt>판정 이유</dt><dd>${esc(res.why)}</dd>
+        <dt>장애등급</dt><dd>${res.grade}등급${res.gradeNotes.length ? ' (' + esc(res.gradeNotes.join(', ')) + ')' : ' (보정 없음)'}</dd>
+        <dt>대응 체계</dt><dd><b>${esc(res.emergency)}</b></dd>
+        <dt>보고 라인</dt><dd>${esc(res.report)}</dd>
+        <dt>대국민 안내</dt><dd>${res.notice.map(esc).join('<br>')}</dd></dl>
+      ${res.extra.map((x) => `<div class="warnbox">${esc(x)}</div>`).join('')}`;
+    if (!$('f-recover').value) { $('f-recover').value = local(E.addMin(input.start, 240)); renderDeadline(); }
+  }
+  function renderDeadline() {
+    const v = $('f-recover').value; if (!v) { $('deadlineOut').innerHTML = ''; return; }
+    const d = new Date(v); loadHolidays(d.getFullYear());
+    const r = E.deadline(d, R, hol(d));
+    $('deadlineOut').innerHTML = `<div class="facts-grid" style="margin-top:12px"><div class="fact"><div class="l">기한일에 장애로 전자신고·납부를 못 한 경우</div><div class="v">${r.text}까지</div><small>가산세 등 불이익 없음</small></div></div>
+      <ul class="facts">${r.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
+      <div class="hint">※ 일정 기간을 정해 일괄 연장할 때는 §26①(지자체장 연장)을 적용합니다(2026.7. 사례: 6.26.~7.6. 도래분 → 7.7.).</div>`;
+  }
+  function fillSample() {
+    const i = S.out.incident;
+    $('f-start').value = i.start;
+    R.services.forEach((s) => ($('svc-' + s.id).checked = i.services.includes(s.id)));
+    $('f-scope').value = i.scope; $('f-cause').value = i.cause; $('f-full').checked = i.full; $('f-media').checked = i.media;
+    $('f-recover').value = '2026-11-04T20:50';
+    sampleElapsed = i.elapsed; renderIntake(); renderDeadline(); sampleElapsed = null;
+  }
+
+  // ── 긴급 경보(재난문자형): 위급=깜빡임+사이렌, 긴급=경고음, 안전안내=띠 알림 ──
+  const Alarm = {
+    on: false, ctx: null, timer: null,
+    async enable() {
+      try { this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)(); await this.ctx.resume(); } catch (e) {}
+      try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch (e) {}
+      this.on = true; this.tone([880], 0.15);
+    },
+    tone(freqs, dur, gap = 0.05, start = 0) {
+      if (!this.ctx) return start;
+      let t = this.ctx.currentTime + start;
+      for (const f of freqs) {
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.02); g.gain.setValueAtTime(0.12, t + dur - 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.02); t += dur + gap;
+      }
+      return t - this.ctx.currentTime;
+    },
+    play(kind) {
+      if (!this.on || !this.ctx) return;
+      this.stop();
+      if (kind === 'beep') { this.tone([1046, 1046, 1046], 0.18, 0.12); return; }
+      if (kind === 'siren') {
+        const cycle = () => { this.tone([960, 720, 960, 720, 960, 720], 0.42, 0.03); };
+        cycle(); let n = 1;
+        this.timer = setInterval(() => { if (++n > 4) return this.stop(); cycle(); }, 3600); // 약 15초 후 자동 정지
+      }
+    },
+    stop() { clearInterval(this.timer); this.timer = null; },
+  };
+  let toastTimer = null;
+  function raiseAlert(levelKey, title, text, go) {
+    const lv = R.alerts[levelKey]; if (!lv) return;
+    const when = new Date();
+    try { if (Alarm.on && 'Notification' in window && Notification.permission === 'granted' && levelKey !== 'info') new Notification(`[${lv.name}] ${title}`, { body: text }); } catch (e) {}
+    if (levelKey === 'info') {
+      const t = $('toast'); t.textContent = `[${lv.name}] ${title}`; t.hidden = false;
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 5000); return;
+    }
+    const ov = $('alertOverlay');
+    ov.className = `alert-overlay lv-${levelKey}${lv.flash ? ' flash' : ''}`;
+    $('alertLevel').textContent = `${lv.name} 경보`;
+    $('alertTitle').textContent = title; $('alertText').textContent = text;
+    $('alertMeta').textContent = `${E.fullText(when)} 발령 · ${Alarm.on ? (lv.sound === 'siren' ? '사이렌 울림' : '경고음 울림') : '경보음 꺼짐 — 오른쪽 위에서 켤 수 있습니다'}`;
+    ov.hidden = false; $('alertAck').focus();
+    $('alertGo').onclick = () => { closeAlert(); if (go) go(); };
+    Alarm.play(lv.sound);
+  }
+  function closeAlert() { $('alertOverlay').hidden = true; Alarm.stop(); }
+  $('alertAck').addEventListener('click', closeAlert);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('alertOverlay').hidden) closeAlert(); });
+  $('alertToggle').addEventListener('click', async (e) => {
+    if (Alarm.on) { Alarm.on = false; Alarm.stop(); } else await Alarm.enable();
+    e.currentTarget.setAttribute('aria-pressed', String(Alarm.on));
+    e.currentTarget.textContent = Alarm.on ? '경보음 켜짐' : '경보음 켜기';
+  });
+  function boardAlert(key) {
+    const sc = S[key], lv = R.alertMap.board[sc.level]; if (!lv) return;
+    const target = sc.incident ? 'boardGolden' : sc.threat ? 'threatPanel' : sc.region ? 'regionPanel' : 'tiles';
+    raiseAlert(lv, sc.title, sc.text, () => $(target).scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+  let lastType = null;
+  function intakeAlert(res) {
+    if (!res.type || res.type === lastType) { lastType = res.type; return; }
+    lastType = res.type;
+    raiseAlert(R.alertMap.type[res.type], `${R.types[res.type].name} · ${res.grade}등급 장애 판정`, res.emergency, () => $('intakeGolden').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+
+  // ── TV 모드: 사무실 벽걸이 TV용 큰 화면(결론·신호등·업무별 상태만), 키보드로 조작 ──
+  const tv = { on: false, auto: false, timer: null, clock: null };
+  const SC_KEYS = Object.keys(S);
+  const tvTick = () => ($('tvClock').textContent = E.fullText(new Date()));
+  function tvSet(on) {
+    tv.on = on;
+    document.documentElement.classList.toggle('tv', on); document.body.classList.toggle('tv', on);
+    $('tvToggle').setAttribute('aria-pressed', String(on));
+    clearInterval(tv.clock);
+    if (on) {
+      show('board'); tvTick(); tv.clock = setInterval(tvTick, 1000);
+      try { const f = document.documentElement.requestFullscreen; if (f) f.call(document.documentElement).catch(() => {}); } catch (e) {}
+    } else {
+      tvAuto(false);
+      try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+    }
+  }
+  function tvGo(key) {
+    renderBoard(key); boardAlert(key);
+    if (tv.auto) setTimeout(closeAlert, 6000); // 자동 순환 중에는 경보창이 스스로 닫힘
+  }
+  function tvAuto(on) {
+    tv.auto = on; clearInterval(tv.timer);
+    $('tvAuto').textContent = on ? 'A 순환 중 · 끄기' : 'A 자동 순환';
+    if (on) {
+      let i = Math.max(0, SC_KEYS.indexOf(store.get('gt-scenario', 'normal')));
+      tv.timer = setInterval(() => { i = (i + 1) % SC_KEYS.length; tvGo(SC_KEYS[i]); }, 9000);
+    }
+  }
+  $('tvToggle').addEventListener('click', () => tvSet(!tv.on));
+  $('tvExit').addEventListener('click', () => tvSet(false));
+  $('tvAuto').addEventListener('click', () => tvAuto(!tv.auto));
+  document.addEventListener('fullscreenchange', () => { if (tv.on && !document.fullscreenElement) tvSet(false); });
+  document.addEventListener('keydown', (e) => {
+    if (!tv.on || e.ctrlKey || e.metaKey || e.altKey) return;
+    const n = +e.key;
+    if (n >= 1 && n <= SC_KEYS.length) tvGo(SC_KEYS[n - 1]);
+    else if (e.key === 'a' || e.key === 'A') tvAuto(!tv.auto);
+    else if (e.key === 't' || e.key === 'T' || (e.key === 'Escape' && $('alertOverlay').hidden)) tvSet(false);
+  });
+
+  // ── 화면 전환 ──
+  function show(view) {
+    ['board', 'intake', 'advisory'].forEach((v) => ($('view-' + v).hidden = v !== view));
+    document.querySelectorAll('.nav button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    if (view === 'intake') $('asof').textContent = '장애 상황을 입력하면 매뉴얼 기준으로 판정합니다';
+    else if (view === 'advisory') { $('asof').textContent = '보안권고문을 소관 시스템과 자동으로 대조합니다 · 가상 데이터'; renderAdvisory(); }
+    else renderBoard(store.get('gt-scenario', 'now') in S ? store.get('gt-scenario', 'now') : 'now');
+    store.set('gt-view', view);
+  }
+
+  // ── 시작 ──
+  $('scenarioTabs').innerHTML = Object.entries(S).map(([k, s]) => `<button id="sc-${k}" data-s="${k}">${esc(s.tab)}</button>`).join('');
+  document.querySelectorAll('#scenarioTabs button').forEach((b) => b.addEventListener('click', () => { renderBoard(b.dataset.s); boardAlert(b.dataset.s); }));
+  document.querySelectorAll('.nav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
+  buildForm();
+  $('form').addEventListener('input', renderIntake);
+  $('form').addEventListener('change', renderIntake);
+  $('f-recover').addEventListener('input', renderDeadline);
+  $('f-now').addEventListener('click', () => { $('f-start').value = local(new Date()); renderIntake(); });
+  $('f-sample').addEventListener('click', fillSample);
+  $('f-reset').addEventListener('click', () => { $('form').reset(); $('f-recover').value = ''; renderIntake(); renderDeadline(); });
+  loadHolidays(new Date().getFullYear()); loadHolidays(2026);
+  const hash = location.hash.replace('#', '');
+  $('adv-run').addEventListener('click', runAdvisory);
+  $('adv-reset').addEventListener('click', () => { advState.run = false; renderAdvisory(); });
+  const VIEWS = ['board', 'intake', 'advisory'], saved = store.get('gt-view', 'board');
+  show(VIEWS.includes(hash) ? hash : VIEWS.includes(saved) ? saved : 'board');
+})();
+
+</script>
+</body>
+</html>

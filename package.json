@@ -1,0 +1,12 @@
+{
+  "name": "golden-time-alarm",
+  "version": "1.0.0",
+  "description": "지방세시스템 골든타임 알리미 — 장애·작업·해킹 3대 위험 통합 대응",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tools/test.js",
+    "build": "node tools/build-single.js"
+  },
+  "engines": { "node": ">=18" }
+}
