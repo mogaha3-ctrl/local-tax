@@ -199,7 +199,7 @@ body.tv .spark{display:none}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <button type="button" id="tvToggle" class="bell" aria-pressed="false" title="사무실 벽걸이 TV용 큰 화면으로 전환합니다">TV 모드</button>
-    <button type="button" id="alertToggle" class="bell" aria-pressed="false" title="긴급 상황 시 경고음과 알림을 받습니다">경보음 켜기</button>
+    <button type="button" id="alertToggle" class="bell" aria-pressed="false" title="긴급 상황 시 알림음(클래식 선율)과 알림을 받습니다">경보음 켜기</button>
     <div class="nav" role="group" aria-label="화면 선택">
       <button id="nav-board" data-view="board">상황판</button>
       <button id="nav-intake" data-view="intake">장애 접수</button>
@@ -387,11 +387,20 @@ window.RULES = {
   ],
 
   // 긴급 경보 — 재난문자 3단계를 본뜬 알림 강도
-  //  critical(위급): 화면 깜빡임 + 사이렌 + 알림 / urgent(긴급): 경고음 + 알림창 / info(안전안내): 소리 없이 띠 알림
+  //  critical(위급): 화면 깜빡임 + 「운명」 동기 + 알림 / urgent(긴급): 차임벨 + 알림창 / info(안전안내): 소리 없이 띠 알림
+  //  귀에 거슬리는 사이렌 대신 저작권이 끝난 클래식 선율을 부드러운 음색으로 연주합니다(음원 파일 없음)
   alerts: {
-    critical: { name: '위급', sound: 'siren', flash: true },
-    urgent:   { name: '긴급', sound: 'beep',  flash: false },
+    critical: { name: '위급', sound: 'fate',  soundLabel: '베토벤 「운명」 첫 동기', flash: true },
+    urgent:   { name: '긴급', sound: 'chime', soundLabel: '웨스트민스터 차임(학교 종소리)', flash: false },
     info:     { name: '안전안내', sound: null, flash: false },
+  },
+  // 선율: [음이름, 길이(초)], 'r' = 쉼표. timbre: strings(현악) / bell(종)
+  melodies: {
+    fate:  { timbre: 'strings', vol: 0.2, repeat: 3, gap: 1.4, // 베토벤 교향곡 제5번 「운명」(1808) 첫 동기
+             notes: [['G4', 0.2], ['G4', 0.2], ['G4', 0.2], ['Eb4', 1.1], ['r', 0.3], ['F4', 0.2], ['F4', 0.2], ['F4', 0.2], ['D4', 1.4]] },
+    chime: { timbre: 'bell', vol: 0.2, repeat: 1, gap: 0, // 웨스트민스터 차임(1793) — 학교 종소리로 익숙한 선율
+             notes: [['E5', 0.55], ['C5', 0.55], ['D5', 0.55], ['G4', 1.0], ['r', 0.35], ['G4', 0.55], ['D5', 0.55], ['E5', 0.55], ['C5', 1.4]] },
+    hello: { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['G5', 0.28], ['E5', 0.7]] }, // 경보음 켤 때 확인음
   },
   // 판정 유형·상황판 상태 → 경보 단계
   alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info' } },
@@ -1349,37 +1358,60 @@ window.SCENARIOS = {
     sampleElapsed = i.elapsed; renderIntake(); renderDeadline(); sampleElapsed = null;
   }
 
-  // ── 긴급 경보(재난문자형): 위급=깜빡임+사이렌, 긴급=경고음, 안전안내=띠 알림 ──
+  // ── 긴급 경보(재난문자형): 위급=깜빡임+「운명」 동기, 긴급=차임벨, 안전안내=띠 알림 ──
+  // 거슬리는 사이렌 대신 클래식 선율을 부드러운 음색으로 연주(선율은 data/rules.js의 melodies, 음원 파일 없음)
   const Alarm = {
-    on: false, ctx: null, timer: null,
+    on: false, ctx: null, master: null, timers: [],
     async enable() {
       try { this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)(); await this.ctx.resume(); } catch (e) {}
       try { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch (e) {}
-      this.on = true; this.tone([880], 0.15);
+      this.on = true; this.play('hello');
     },
-    tone(freqs, dur, gap = 0.05, start = 0) {
-      if (!this.ctx) return start;
-      let t = this.ctx.currentTime + start;
-      for (const f of freqs) {
-        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.type = 'square'; o.frequency.value = f;
-        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.02); g.gain.setValueAtTime(0.12, t + dur - 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.02); t += dur + gap;
+    freq(n) {
+      const m = /^([A-G])([#b]?)(\d)$/.exec(n);
+      const pc = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+      return 440 * Math.pow(2, (12 * (+m[3] + 1) + pc - 69) / 12);
+    },
+    voice(f, t, dur, vol, timbre) {
+      const c = this.ctx, g = c.createGain(); g.connect(this.master);
+      const osc = (type, mul, det = 0) => { const o = c.createOscillator(); o.type = type; o.frequency.value = f * mul; o.detune.value = det; return o; };
+      let srcs, dest = g;
+      if (timbre === 'bell') { // 종: 기음 + 배음, 빠르게 울리고 길게 사라짐
+        srcs = [[osc('sine', 1), 1], [osc('sine', 2), 0.28], [osc('sine', 3.01), 0.07]];
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * 2.4);
+      } else { // 현악 합주: 살짝 어긋난 두 줄 + 한 옥타브 아래, 고음을 걸러 부드럽게
+        const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.5; lp.connect(g); dest = lp;
+        srcs = [[osc('sawtooth', 1, -6), 0.45], [osc('sawtooth', 1, 6), 0.45], [osc('triangle', 0.5), 0.5]];
+        const end = t + dur;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.035);
+        g.gain.setValueAtTime(vol * 0.85, Math.max(t + 0.04, end - 0.06)); g.gain.exponentialRampToValueAtTime(0.0001, end + 0.3);
       }
-      return t - this.ctx.currentTime;
+      const stopAt = t + dur * 2.6 + 0.4;
+      srcs.forEach(([o, amp]) => { const a = c.createGain(); a.gain.value = amp; o.connect(a).connect(dest); o.start(t); o.stop(stopAt); });
+    },
+    melody(m, start) {
+      let t = start;
+      for (const [n, d] of m.notes) { if (n !== 'r') this.voice(this.freq(n), t, d, m.vol, m.timbre); t += d; }
+      return t - start;
     },
     play(kind) {
-      if (!this.on || !this.ctx) return;
+      const m = R.melodies && R.melodies[kind];
+      if (!this.on || !this.ctx || !m) return;
       this.stop();
-      if (kind === 'beep') { this.tone([1046, 1046, 1046], 0.18, 0.12); return; }
-      if (kind === 'siren') {
-        const cycle = () => { this.tone([960, 720, 960, 720, 960, 720], 0.42, 0.03); };
-        cycle(); let n = 1;
-        this.timer = setInterval(() => { if (++n > 4) return this.stop(); cycle(); }, 3600); // 약 15초 후 자동 정지
+      const c = this.ctx, master = c.createGain(), comp = c.createDynamicsCompressor();
+      master.connect(comp).connect(c.destination); this.master = master;
+      const len = this.melody(m, c.currentTime + 0.05);
+      for (let i = 1; i < (m.repeat || 1); i++) {
+        this.timers.push(setTimeout(() => { if (this.master === master) this.melody(m, c.currentTime + 0.02); }, (len + m.gap) * 1000 * i));
       }
     },
-    stop() { clearInterval(this.timer); this.timer = null; },
+    stop() {
+      this.timers.forEach(clearTimeout); this.timers = [];
+      if (this.master && this.ctx) { const g = this.master; g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.08); setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 700); }
+      this.master = null;
+    },
   };
+  window.GT_ALARM = Alarm; // 미리듣기·점검용
   let toastTimer = null;
   function raiseAlert(levelKey, title, text, go) {
     const lv = R.alerts[levelKey]; if (!lv) return;
@@ -1393,7 +1425,7 @@ window.SCENARIOS = {
     ov.className = `alert-overlay lv-${levelKey}${lv.flash ? ' flash' : ''}`;
     $('alertLevel').textContent = `${lv.name} 경보`;
     $('alertTitle').textContent = title; $('alertText').textContent = text;
-    $('alertMeta').textContent = `${E.fullText(when)} 발령 · ${Alarm.on ? (lv.sound === 'siren' ? '사이렌 울림' : '경고음 울림') : '경보음 꺼짐 — 오른쪽 위에서 켤 수 있습니다'}`;
+    $('alertMeta').textContent = `${E.fullText(when)} 발령 · ${Alarm.on ? (lv.soundLabel ? lv.soundLabel + ' 연주' : '소리 없음') : '경보음 꺼짐 — 오른쪽 위에서 켤 수 있습니다'}`;
     ov.hidden = false; $('alertAck').focus();
     $('alertGo').onclick = () => { closeAlert(); if (go) go(); };
     Alarm.play(lv.sound);

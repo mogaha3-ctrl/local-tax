@@ -81,11 +81,20 @@ window.RULES = {
   ],
 
   // 긴급 경보 — 재난문자 3단계를 본뜬 알림 강도
-  //  critical(위급): 화면 깜빡임 + 사이렌 + 알림 / urgent(긴급): 경고음 + 알림창 / info(안전안내): 소리 없이 띠 알림
+  //  critical(위급): 화면 깜빡임 + 「운명」 동기 + 알림 / urgent(긴급): 차임벨 + 알림창 / info(안전안내): 소리 없이 띠 알림
+  //  귀에 거슬리는 사이렌 대신 저작권이 끝난 클래식 선율을 부드러운 음색으로 연주합니다(음원 파일 없음)
   alerts: {
-    critical: { name: '위급', sound: 'siren', flash: true },
-    urgent:   { name: '긴급', sound: 'beep',  flash: false },
+    critical: { name: '위급', sound: 'fate',  soundLabel: '베토벤 「운명」 첫 동기', flash: true },
+    urgent:   { name: '긴급', sound: 'chime', soundLabel: '웨스트민스터 차임(학교 종소리)', flash: false },
     info:     { name: '안전안내', sound: null, flash: false },
+  },
+  // 선율: [음이름, 길이(초)], 'r' = 쉼표. timbre: strings(현악) / bell(종)
+  melodies: {
+    fate:  { timbre: 'strings', vol: 0.2, repeat: 3, gap: 1.4, // 베토벤 교향곡 제5번 「운명」(1808) 첫 동기
+             notes: [['G4', 0.2], ['G4', 0.2], ['G4', 0.2], ['Eb4', 1.1], ['r', 0.3], ['F4', 0.2], ['F4', 0.2], ['F4', 0.2], ['D4', 1.4]] },
+    chime: { timbre: 'bell', vol: 0.2, repeat: 1, gap: 0, // 웨스트민스터 차임(1793) — 학교 종소리로 익숙한 선율
+             notes: [['E5', 0.55], ['C5', 0.55], ['D5', 0.55], ['G4', 1.0], ['r', 0.35], ['G4', 0.55], ['D5', 0.55], ['E5', 0.55], ['C5', 1.4]] },
+    hello: { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['G5', 0.28], ['E5', 0.7]] }, // 경보음 켤 때 확인음
   },
   // 판정 유형·상황판 상태 → 경보 단계
   alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info' } },
