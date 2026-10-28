@@ -339,8 +339,8 @@
     sampleElapsed = i.elapsed; renderIntake(); renderDeadline(); sampleElapsed = null;
   }
 
-  // ── 긴급 경보(재난문자형): 위급=깜빡임+「운명」 동기, 긴급=차임벨, 안전안내=띠 알림 ──
-  // 거슬리는 사이렌 대신 클래식 선율을 부드러운 음색으로 연주(선율은 data/rules.js의 melodies, 음원 파일 없음)
+  // ── 긴급 경보(재난문자형): 위급=깜빡임+상승 알림음, 긴급=띵동 알림음, 안전안내=띠 알림 ──
+  // 거슬리는 사이렌 대신 맑은 종소리 신호음(선율은 data/rules.js의 melodies, 음원 파일 없음)
   const Alarm = {
     on: false, ctx: null, master: null, timers: [],
     async enable() {

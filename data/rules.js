@@ -81,20 +81,21 @@ window.RULES = {
   ],
 
   // 긴급 경보 — 재난문자 3단계를 본뜬 알림 강도
-  //  critical(위급): 화면 깜빡임 + 「운명」 동기 + 알림 / urgent(긴급): 차임벨 + 알림창 / info(안전안내): 소리 없이 띠 알림
-  //  귀에 거슬리는 사이렌 대신 저작권이 끝난 클래식 선율을 부드러운 음색으로 연주합니다(음원 파일 없음)
+  //  critical(위급): 화면 깜빡임 + 상승 알림음 + 알림 / urgent(긴급): 띵동 알림음 + 알림창 / info(안전안내): 소리 없이 띠 알림
+  //  거슬리는 사이렌 대신 맑은 종소리 신호음(현장 의견 반영). 음원 파일 없이 브라우저가 합성합니다
   alerts: {
-    critical: { name: '위급', sound: 'fate',  soundLabel: '베토벤 「운명」 첫 동기', flash: true },
-    urgent:   { name: '긴급', sound: 'chime', soundLabel: '웨스트민스터 차임(학교 종소리)', flash: false },
+    critical: { name: '위급', sound: 'rise',     soundLabel: '상승 알림음(띵띵띵띵)', flash: true },
+    urgent:   { name: '긴급', sound: 'dingdong', soundLabel: '띵동 알림음', flash: false },
     info:     { name: '안전안내', sound: null, flash: false },
   },
-  // 선율: [음이름, 길이(초)], 'r' = 쉼표. timbre: strings(현악) / bell(종)
+  // 선율: [음이름, 길이(초)], 'r' = 쉼표. timbre: bell(종) / strings(현악)
+  //  위급은 올라가며 빠르게 반복, 긴급은 내려오며 천천히 두 번 — 방향이 반대라 듣자마자 구분됩니다
   melodies: {
-    fate:  { timbre: 'strings', vol: 0.2, repeat: 3, gap: 1.4, // 베토벤 교향곡 제5번 「운명」(1808) 첫 동기
-             notes: [['G4', 0.2], ['G4', 0.2], ['G4', 0.2], ['Eb4', 1.1], ['r', 0.3], ['F4', 0.2], ['F4', 0.2], ['F4', 0.2], ['D4', 1.4]] },
-    chime: { timbre: 'bell', vol: 0.2, repeat: 1, gap: 0, // 웨스트민스터 차임(1793) — 학교 종소리로 익숙한 선율
-             notes: [['E5', 0.55], ['C5', 0.55], ['D5', 0.55], ['G4', 1.0], ['r', 0.35], ['G4', 0.55], ['D5', 0.55], ['E5', 0.55], ['C5', 1.4]] },
-    hello: { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['G5', 0.28], ['E5', 0.7]] }, // 경보음 켤 때 확인음
+    rise:     { timbre: 'bell', vol: 0.22, repeat: 3, gap: 0.7, // 도-미-솔-도↑ 두 번
+                notes: [['C5', 0.11], ['E5', 0.11], ['G5', 0.11], ['C6', 0.3], ['r', 0.12], ['C5', 0.11], ['E5', 0.11], ['G5', 0.11], ['C6', 0.6]] },
+    dingdong: { timbre: 'bell', vol: 0.2, repeat: 1, gap: 0, // 라→파 "띵-동, 띵-동"
+                notes: [['A5', 0.3], ['F5', 0.6], ['r', 0.25], ['A5', 0.3], ['F5', 1.0]] },
+    hello:    { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['G5', 0.28], ['E5', 0.7]] }, // 경보음 켤 때 확인음
   },
   // 판정 유형·상황판 상태 → 경보 단계
   alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info' } },
