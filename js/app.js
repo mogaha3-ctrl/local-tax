@@ -1,10 +1,13 @@
 /* 화면 동작 — 판정 계산은 engine.js, 기준값은 data/*.js 에 있습니다. */
 (function () {
-  const R = window.RULES, E = window.Engine, S = window.SCENARIOS;
+  const R = window.RULES, E = window.Engine, S = window.SCENARIOS, M = window.MASCOT;
+  // 캐릭터 「골키퍼」: data-gk 자리에 상황별 그림을 채움
+  const gkFill = (root = document) => root.querySelectorAll('[data-gk]').forEach((el) => (el.innerHTML = M.svg(el.dataset.gk, el.dataset.size || 56)));
+  const gkSay = (st, line) => `<b>${M.states[st].shape} ${M.name}</b> ${esc(line || M.states[st].line)}`;
   const $ = (id) => document.getElementById(id);
-  const LABEL = { ok: '정상', warn: '주의', bad: '장애', threat: '외부 위협' };
-  const ICON = { ok: '●', warn: '▲', bad: '■', threat: '◆' };
-  const TILE_TXT = { ok: '정상', warn: '지연', bad: '이용 불가', threat: '주의' };
+  const LABEL = { ok: '정상', warn: '주의', bad: '장애', threat: '외부 위협', drill: '훈련' };
+  const ICON = { ok: '●', warn: '▲', bad: '■', threat: '◆', drill: '◇' };
+  const TILE_TXT = { ok: '정상', warn: '지연', bad: '이용 불가', threat: '주의', drill: '훈련 중' };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const store = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
@@ -167,7 +170,9 @@
   const regionState = {};
   function renderRegion(sc) {
     const el = $('regionPanel'), g = sc.region, Q = R.region.questions;
-    const st = (regionState[sc.tab] = regionState[sc.tab] || { ...g.defaults });
+    const slow = (g.slowest || []).map((r) => ({ name: r[0], sec: r[1], sp: E.speedLevel(r[1], R.speed.bands) }));
+    const auto = slow.length ? E.regionConcentrated(slow, R.speed.bands) : null;
+    const st = (regionState[sc.tab] = regionState[sc.tab] || { ...g.defaults, ...(auto == null ? {} : { sameArea: auto }) });
     const now = new Date(g.now);
     const reps = g.reports.map((r) => ({ name: r[0], at: new Date(r[1]), symptom: r[2], lv: r[3], state: r[4], repeat: r[5] }));
     const first = reps.reduce((a, r) => (r.at < a ? r.at : a), reps[0].at);
@@ -184,10 +189,14 @@
       <div class="tbl"><table><thead><tr><th>지자체</th><th>최초 접수</th><th>증상</th><th>상태</th></tr></thead><tbody>
         ${reps.map((r) => `<tr><td style="font-family:var(--font);color:var(--ink)">${esc(r.name)}${r.repeat ? ' <small>↻ 반복</small>' : ''}</td><td>${E.hm(r.at)}</td><td style="font-family:var(--font)">${esc(r.symptom)}</td><td><span class="pill s-${r.lv}">${ICON[r.lv]} ${esc(r.state)}</span></td></tr>`).join('')}
       </tbody></table></div>
+      ${slow.length ? `<div style="margin-top:14px"><div class="ptitle"><b style="font-size:.9rem">지역별 체감 하위 5곳 — 평균 응답(초, 최근 5분)</b><span class="who">KLID 관제 화면과 같은 체감 4단계 · 가상 예시</span></div>
+        <div class="tbl"><table><thead><tr><th>순위</th><th>권역</th><th>평균 응답</th><th>체감</th></tr></thead><tbody>
+        ${slow.map((r, i) => `<tr><td>${i + 1}</td><td style="font-family:var(--font);color:var(--ink)">${esc(r.name)}</td><td>${r.sec.toFixed(1)}초</td><td><span class="pill s-${r.sp.lv}">${ICON[r.sp.lv]} ${r.sp.name}</span></td></tr>`).join('')}
+        </tbody></table></div></div>` : ''}
       <div class="grid2" style="gap:14px;margin-top:14px">
         <div><b style="font-size:.9rem">원인 가르기 — 세 가지만 답하세요</b>
           <div style="display:grid;gap:8px;margin-top:8px">${Q.map((q) => `<fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0"><legend style="font-size:.85rem;font-weight:600;padding:0 4px">${esc(q.q)}</legend>
-            <div class="hint">${esc(q.hint)}</div>
+            <div class="hint">${esc(q.hint)}</div>${q.id === 'sameArea' && auto != null ? `<div class="hint" style="color:var(--accent);font-weight:600">▶ 체감 하위 표로 자동 판단: ${auto ? `'${esc(slow[0].name)}'만 ${slow[0].sp.name} → 예` : '여러 권역이 함께 느림 → 아니오'}</div>` : ''}
             <div style="display:flex;gap:16px;margin-top:4px"><label class="opt"><input type="radio" name="rq-${q.id}" value="1" ${st[q.id] ? 'checked' : ''}><span>예</span></label><label class="opt"><input type="radio" name="rq-${q.id}" value="0" ${st[q.id] ? '' : 'checked'}><span>아니오</span></label></div></fieldset>`).join('')}</div>
           <div id="regionVerdict" style="margin-top:10px"></div></div>
         <div><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('region', [])}</div>
@@ -263,23 +272,74 @@
       () => $('advResult').scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
+  // ── DDoS 모의훈련: [훈련 상황] 표시 + 단계별 진행판·기록 + 문서 ──
+  const drillState = {};
+  function renderDrill(sc) {
+    const el = $('drillPanel'), g = sc.drill;
+    const st = (drillState[sc.tab] = drillState[sc.tab] || { done: Object.fromEntries(g.steps.map((s) => [s[0], s[4]])), defense: true, service: true, cur: 0 });
+    const d0 = new Date(g.date + 'T00:00'), dateText = `${d0.getMonth() + 1}.${d0.getDate()}.(${'일월화수목금토'[d0.getDay()]})`;
+    el.hidden = false;
+    const yn = (id, q, val, yes, no) => `<fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0"><legend style="font-size:.85rem;font-weight:600;padding:0 4px">${q}</legend>
+      <div style="display:flex;gap:16px"><label class="opt"><input type="radio" name="dq-${id}" value="1" ${val ? 'checked' : ''}><span>${yes}</span></label><label class="opt"><input type="radio" name="dq-${id}" value="0" ${val ? '' : 'checked'}><span>${no}</span></label></div></fieldset>`;
+    const draw = () => {
+      const steps = g.steps.map((s) => ({ id: s[0], name: s[1], what: s[2], time: s[3], done: !!st.done[s[0]] }));
+      const m = E.drillMetrics(steps), fmt = (v) => (v == null ? '기록 전' : `${v}분`);
+      const time = (id) => (steps.find((s) => s.id === id) || {}).time || '';
+      el.innerHTML = `<div class="ptitle"><h3>DDoS 모의훈련 — 진행판</h3><span class="pill">${ICON.drill} 훈련 상황 · 실제 아님</span></div>
+        <div class="who">${esc(g.name)} · ${esc(g.org)} · 가상 데이터</div>
+        <div class="facts-grid" style="margin-top:10px">
+          <div class="fact" style="background:var(--drill-bg)"><div class="l">공격 시작 → 탐지</div><div class="v" style="color:var(--drill)">${fmt(m.detect)}</div></div>
+          <div class="fact" style="background:var(--drill-bg)"><div class="l">공격 시작 → 차단</div><div class="v" style="color:var(--drill)">${fmt(m.block)}</div></div>
+          <div class="fact"><div class="l">전체 소요(공지~종료)</div><div class="v">${m.total == null ? '진행 중' : m.total + '분'}</div></div>
+          <div class="fact"><div class="l">진행</div><div class="v">${m.done} / ${m.all}단계</div></div></div>
+        <div class="grid2" style="gap:14px">
+          <div><b style="font-size:.9rem">단계별 확인 — 누르면 완료로 기록됩니다</b>
+            <ol class="dsteps">${steps.map((s) => `<li class="${s.done ? 'done' : ''}"><span class="t">${esc(s.time)}</span><span><b>${esc(s.name)}</b><br><span class="d">${esc(s.what)}</span></span><button type="button" data-step="${s.id}" aria-pressed="${s.done}">${s.done ? '✓ 완료' : '완료'}</button></li>`).join('')}</ol>
+            <div style="display:grid;gap:8px;margin-top:10px">${yn('defense', '탐지·방어가 정상 동작했나요?', st.defense, '예', '아니오')}${yn('service', '대국민 서비스에 특이사항이 없었나요?', st.service, '없음', '있음')}</div></div>
+          <div><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('drill', [])}</div></div>`;
+      el.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => { st.done[b.dataset.step] = !st.done[b.dataset.step]; draw(); }));
+      ['defense', 'service'].forEach((k) => el.querySelectorAll(`input[name="dq-${k}"]`).forEach((r) => r.addEventListener('change', (e) => { st[k] = e.target.value === '1'; draw(); })));
+      const v = { name: g.name, org: g.org, orgShort: '국정자원·개발원', dateText, start: time('notice'), end: st.done.end ? time('end') : '진행 중', reportDue: g.reportDue,
+        defense: st.defense ? '정상적으로 동작 수행되었습니다' : '일부 미흡하여 보완이 필요합니다(세부 내용은 결과보고서에 기재)',
+        service: st.service ? '별다른 특이사항 없었습니다' : '일부 영향이 있었습니다(영향 범위·시간 별도 보고)',
+        endLine: st.done.end ? '최종 서비스 정상 여부 확인까지 완료되었기에 디도스 훈련 종료 보고드립니다.' : '최종 서비스 정상 여부를 확인 중이며, 확인되면 종료 보고드리겠습니다.',
+        detectMin: fmt(m.detect), blockMin: fmt(m.block), totalMin: m.total == null ? '진행 중' : m.total + '분',
+        timeline: steps.map((s) => ` ○ ${s.time} ${s.name} — ${s.done ? '완료' : '예정'}`).join('\n') };
+      el.querySelector('.docs').dataset.cur = st.cur;
+      setDocs(el, 'drill', window.DRILL_TEMPLATES.map((t) => ({ name: t.name, to: t.to, text: E.fill(t.body, v) })));
+      el.querySelectorAll('.doctabs button').forEach((b) => b.addEventListener('click', () => (st.cur = +b.dataset.i)));
+    };
+    draw();
+  }
+
   // ── 상황판 ──
   function renderBoard(key) {
     const sc = S[key];
     document.querySelectorAll('#scenarioTabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === key)));
     $('asof').textContent = sc.asof; $('tvScenario').textContent = sc.tab;
     $('verdict').className = 'verdict s-' + sc.level;
-    $('lamp').textContent = ICON[sc.level];
+    const gk = M.byScenario[key] || M.byLevel[sc.level] || 'normal';
+    $('gkArt').innerHTML = M.svg(gk, 120); $('gkArt').dataset.state = gk;
+    $('gkSay').innerHTML = gkSay(gk);
     $('vTitle').textContent = sc.title;
     $('vText').textContent = sc.text;
     $('systems').innerHTML = sc.sys.map((y) => `<section class="panel s-${y.level}">
       <div class="ptitle"><h3>${esc(y.name)}</h3><span class="pill">${ICON[y.level]} ${LABEL[y.level]}</span></div>
-      <div class="who">${esc(y.who)}</div><p class="say">${esc(y.say)}</p>
+      <div class="who">${esc(y.who)} · 체감 <b>${esc(y.speed || R.speed.byLevel[y.level])}</b></div><p class="say">${esc(y.say)}</p>
       <div class="kpis">${y.k.map((k, i) => `<div class="kpi s-${(y.kc || [])[i] || y.level}"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="n">${k[2]}</div></div>`).join('')}</div>
       <div class="spark">${spark(y.curve, y.level)}<div class="cap"><span>오늘 이용자 추이(가상)</span><span>● 현재</span></div></div></section>`).join('');
     $('tiles').innerHTML = sc.tiles.map((t) => `<div class="tile s-${t[1]}"><b>${esc(t[0])}</b><span>${ICON[t[1]]} ${esc(t[2] || TILE_TXT[t[1]])}</span></div>`).join('');
     $('threatPanel').hidden = !sc.threat; if (sc.threat) renderThreat(sc);
     $('regionPanel').hidden = !sc.region; if (sc.region) renderRegion(sc);
+    $('drillPanel').hidden = !sc.drill; if (sc.drill) renderDrill(sc);
+    $('drillRibbon').hidden = sc.level !== 'drill';
+    // 작업관리 현황(KLID 관제 화면과 같은 구분) + 작업 영향 가능 표시
+    const works = sc.work || [], imp = E.workImpact(sc.level, works, R);
+    if (imp) $('vText').textContent += ' 작업 영향 가능 — 아래 작업관리 현황을 먼저 확인하세요.';
+    $('workPanel').innerHTML = `<div class="ptitle"><h3>작업관리 현황</h3><span class="who">정기점검·업데이트·장애조치 · 가상 데이터</span></div>
+      <div class="facts-grid" style="margin-top:8px">${['전체', ...R.work.types].map((t) => `<div class="fact"><div class="l">${t}</div><div class="v">${t === '전체' ? works.length : works.filter((w) => w.type === t).length}건</div></div>`).join('')}</div>
+      ${works.length ? `<div class="tbl"><table><thead><tr><th>구분</th><th>작업</th><th>시간</th><th>상태</th></tr></thead><tbody>${works.map((w) => `<tr><td>${esc(w.type)}</td><td style="font-family:var(--font);color:var(--ink)">${esc(w.name)}</td><td>${esc(w.time)}</td><td style="font-family:var(--font)">${esc(w.status)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="who">진행 중이거나 최근 끝난 작업이 없습니다.</p>'}
+      ${imp ? `<div class="warnbox" style="border-left-color:var(--warn);background:var(--warn-bg)"><b>▲ 작업 영향 가능</b> — ${esc(imp.map((w) => w.name).join(', '))}<br>${esc(R.work.hint)}</div>` : ''}`;
     if (sc.incident) { const i = sc.incident; renderGolden($('boardGolden'), { ...i, start: new Date(i.start) }, i.elapsed); }
     else $('boardGolden').hidden = true;
     store.set('gt-scenario', key);
@@ -304,7 +364,7 @@
     const input = readForm();
     if (!input || !input.services.length) {
       lastType = null;
-      $('result').innerHTML = '<div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div>';
+      $('result').innerHTML = '<div class="result-empty"><span class="gk-mini" data-gk="normal"></span><span>왼쪽에서 발생 일시와 안 되는 서비스를 고르면, 골키퍼가 매뉴얼 기준으로 바로 판정해 드려요.</span></div>'; gkFill($('result'));
       $('intakeGolden').hidden = true; return;
     }
     loadHolidays(input.start.getFullYear());
@@ -394,18 +454,22 @@
   };
   window.GT_ALARM = Alarm; // 미리듣기·점검용
   let toastTimer = null;
-  function raiseAlert(levelKey, title, text, go) {
+  function raiseAlert(levelKey, title, text, go, gk) {
     const lv = R.alerts[levelKey]; if (!lv) return;
+    gk = gk || { critical: 'bad', urgent: 'threat', info: 'warn', drill: 'drill' }[levelKey] || 'normal';
     const when = new Date();
-    try { if (Alarm.on && 'Notification' in window && Notification.permission === 'granted' && levelKey !== 'info') new Notification(`[${lv.name}] ${title}`, { body: text }); } catch (e) {}
-    if (levelKey === 'info') {
-      const t = $('toast'); t.textContent = `[${lv.name}] ${title}`; t.hidden = false;
-      clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 5000); return;
+    try { if (Alarm.on && 'Notification' in window && Notification.permission === 'granted' && !lv.toast) new Notification(`[${lv.name}] ${title}`, { body: text }); } catch (e) {}
+    if (lv.toast) { // 안전안내·훈련: 화면을 가리지 않는 띠 알림(훈련은 짧은 알림음)
+      const t = $('toast'); t.innerHTML = `<span class="gk-mini">${M.svg(gk, 40)}</span><span>[${esc(lv.name)}] ${esc(title.replace(/^\[[^\]]+\]\s*/, ''))}</span>`; t.hidden = false;
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 5000);
+      if (lv.sound) Alarm.play(lv.sound);
+      return;
     }
     const ov = $('alertOverlay');
     ov.className = `alert-overlay lv-${levelKey}${lv.flash ? ' flash' : ''}`;
     $('alertLevel').textContent = `${lv.name} 경보`;
     $('alertTitle').textContent = title; $('alertText').textContent = text;
+    $('alertGk').innerHTML = M.svg(gk, 104); $('alertGk').dataset.state = gk; $('alertSay').innerHTML = gkSay(gk);
     $('alertMeta').textContent = `${E.fullText(when)} 발령 · ${Alarm.on ? (lv.soundLabel ? lv.soundLabel + ' 연주' : '소리 없음') : '경보음 꺼짐 — 오른쪽 위에서 켤 수 있습니다'}`;
     ov.hidden = false; $('alertAck').focus();
     $('alertGo').onclick = () => { closeAlert(); if (go) go(); };
@@ -421,14 +485,14 @@
   });
   function boardAlert(key) {
     const sc = S[key], lv = R.alertMap.board[sc.level]; if (!lv) return;
-    const target = sc.incident ? 'boardGolden' : sc.threat ? 'threatPanel' : sc.region ? 'regionPanel' : 'tiles';
-    raiseAlert(lv, sc.title, sc.text, () => $(target).scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    const target = sc.incident ? 'boardGolden' : sc.threat ? 'threatPanel' : sc.region ? 'regionPanel' : sc.drill ? 'drillPanel' : 'tiles';
+    raiseAlert(lv, sc.title, sc.text, () => $(target).scrollIntoView({ behavior: 'smooth', block: 'start' }), M.byScenario[key]);
   }
   let lastType = null;
   function intakeAlert(res) {
     if (!res.type || res.type === lastType) { lastType = res.type; return; }
     lastType = res.type;
-    raiseAlert(R.alertMap.type[res.type], `${R.types[res.type].name} · ${res.grade}등급 장애 판정`, res.emergency, () => $('intakeGolden').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    raiseAlert(R.alertMap.type[res.type], `${R.types[res.type].name} · ${res.grade}등급 장애 판정`, res.emergency, () => $('intakeGolden').scrollIntoView({ behavior: 'smooth', block: 'start' }), res.type === 3 ? 'warn' : 'bad');
   }
 
   // ── TV 모드: 사무실 벽걸이 TV용 큰 화면(결론·신호등·업무별 상태만), 키보드로 조작 ──
@@ -485,6 +549,7 @@
   // ── 시작 ──
   $('scenarioTabs').innerHTML = Object.entries(S).map(([k, s]) => `<button id="sc-${k}" data-s="${k}">${esc(s.tab)}</button>`).join('');
   document.querySelectorAll('#scenarioTabs button').forEach((b) => b.addEventListener('click', () => { renderBoard(b.dataset.s); boardAlert(b.dataset.s); }));
+  $('brandGk').innerHTML = M.svg('hero', 46, `${M.name}(${M.full})`); gkFill();
   document.querySelectorAll('.nav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
   buildForm();
   $('form').addEventListener('input', renderIntake);
@@ -500,3 +565,4 @@
   const VIEWS = ['board', 'intake', 'advisory'], saved = store.get('gt-view', 'board');
   show(VIEWS.includes(hash) ? hash : VIEWS.includes(saved) ? saved : 'board');
 })();
+

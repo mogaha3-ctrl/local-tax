@@ -77,6 +77,46 @@ window.REGION_TEMPLATES = [
   },
 ];
 
+// DDoS 모의훈련 문서 — 실제 상황과 헷갈리지 않도록 [훈련 상황]을 맨 앞에 붙입니다
+window.DRILL_TEMPLATES = [
+  {
+    id: 'drillStart', name: '훈련 시작 공지', to: 'KLID·지자체 공유방 · 관계기관',
+    body:
+`[훈련 상황] {{dateText}} {{start}}부터 지방세(위택스) 홈페이지 대상 {{orgShort}} 합동 DDoS 모의훈련을 실시합니다.
+※ 실제 상황이 아닙니다.
+• 훈련 중 접속 지연 문의가 있으면 훈련 상황임을 안내해 주세요.
+• 훈련과 무관한 이상 징후는 이 방에 바로 알려 주세요.`,
+  },
+  {
+    id: 'drillEnd', name: '훈련 종료 보고', to: '과장 · 국장 · 공유방',
+    body:
+`[훈련 종료 보고] 금일 지방세(위택스) 홈페이지 대상 {{orgShort}} 합동 DDoS 모의훈련은 계획된 시나리오에 맞춰 공격이 있었고,
+DDoS 장비 탐지와 방어가 {{defense}}.
+온라인 대국민 서비스는 {{service}}.
+{{endLine}}
+ㅇ 주요 기록 : 공격 시작 후 탐지 {{detectMin}}, 차단 {{blockMin}}, 전체 소요 {{totalMin}}
+(※ 결과보고서는 {{reportDue}} 예정입니다.)`,
+  },
+  {
+    id: 'drillPaper', name: '결과보고서 틀', to: '내부 보고',
+    body:
+`□ 개요
+ ○ 훈련명 : {{name}}
+ ○ 일시 : {{dateText}} {{start}} ~ {{end}}
+ ○ 참여 : {{org}}
+□ 진행 결과
+{{timeline}}
+ ○ 탐지·방어 : {{defense}}
+ ○ 서비스 영향 : {{service}}
+□ 평가
+ ○ 공격 시작 후 탐지 {{detectMin}}, 차단 {{blockMin}}, 전체 소요 {{totalMin}}
+□ 개선 과제
+ ○ (훈련 중 확인된 보완 사항 작성)
+□ 향후 계획
+ ○ 결과 공유 및 다음 훈련 일정 협의`,
+  },
+];
+
 // 보안권고문 대조 결과 문서
 window.ADVISORY_TEMPLATES = [
   {
@@ -183,3 +223,4 @@ window.THREAT_TEMPLATES = [
 ㅇ 향후 계획 : 점검 결과에 따라 선제 중단 여부 결정·보고`,
   },
 ];
+

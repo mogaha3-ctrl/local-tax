@@ -86,7 +86,8 @@ window.RULES = {
   alerts: {
     critical: { name: '위급', sound: 'rise',     soundLabel: '상승 알림음(띵띵띵띵)', flash: true },
     urgent:   { name: '긴급', sound: 'dingdong', soundLabel: '띵동 알림음', flash: false },
-    info:     { name: '안전안내', sound: null, flash: false },
+    info:     { name: '안전안내', sound: null, flash: false, toast: true },
+    drill:    { name: '훈련', sound: 'drill', soundLabel: '훈련 알림음(띵 띵)', flash: false, toast: true }, // 모의훈련: 실제 경보와 구분
   },
   // 선율: [음이름, 길이(초)], 'r' = 쉼표. timbre: bell(종) / strings(현악)
   //  위급은 올라가며 빠르게 반복, 긴급은 내려오며 천천히 두 번 — 방향이 반대라 듣자마자 구분됩니다
@@ -95,10 +96,11 @@ window.RULES = {
                 notes: [['C5', 0.11], ['E5', 0.11], ['G5', 0.11], ['C6', 0.3], ['r', 0.12], ['C5', 0.11], ['E5', 0.11], ['G5', 0.11], ['C6', 0.6]] },
     dingdong: { timbre: 'bell', vol: 0.2, repeat: 1, gap: 0, // 라→파 "띵-동, 띵-동"
                 notes: [['A5', 0.3], ['F5', 0.6], ['r', 0.25], ['A5', 0.3], ['F5', 1.0]] },
+    drill:    { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['E5', 0.16], ['r', 0.12], ['E5', 0.4]] }, // 훈련: 같은 음 두 번, 짧게
     hello:    { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['G5', 0.28], ['E5', 0.7]] }, // 경보음 켤 때 확인음
   },
   // 판정 유형·상황판 상태 → 경보 단계
-  alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info' } },
+  alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info', drill: 'drill' } },
 
   // 기한 특례(지방세기본법 §24)
   deadline: {
@@ -121,4 +123,16 @@ window.RULES = {
       client:  { name: '단말·프로그램 설치 문제 의심', who: '지자체 담당·KLID', ask: '단말 브라우저·프로그램 설치·캐시 점검 및 접속 기록 확인', action: '다른 시스템은 정상입니다. 단말 브라우저·프로그램 설치·캐시를 점검하고, KLID에 해당 접속 기록을 확인 요청하세요.' },
     },
   },
+
+  // 체감속도 4단계 — KLID 관제 화면과 같은 말(원활·보통·지체·정체). 응답시간 경계값은 제안값(TODO 확인)
+  speed: {
+    byLevel: { ok: '원활', warn: '지체', bad: '정체', threat: '원활', drill: '보통' },
+    bands: [{ upTo: 1.5, name: '원활', lv: 'ok' }, { upTo: 2.0, name: '보통', lv: 'ok' }, { upTo: 3.0, name: '지체', lv: 'warn' }, { upTo: Infinity, name: '정체', lv: 'bad' }],
+  },
+  // 작업관리 현황 — 지연·장애가 작업 중이거나 작업 직후(recentHours 이내)면 '작업 영향 가능'을 먼저 표시
+  work: {
+    types: ['정기점검', '업데이트', '장애조치'], recentHours: 12,
+    hint: '진행 중이거나 막 끝난 작업이 있습니다. 작업 담당에게 먼저 확인하고, 필요하면 작업 중단·되돌리기(롤백)를 검토하세요.',
+  },
 };
+

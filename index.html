@@ -11,10 +11,10 @@
 <body>
 <div class="wrap">
   <header>
-    <div>
+    <div class="brand"><span class="brand-gk" id="brandGk" aria-hidden="true"></span><div>
       <h1>지방세시스템 골든타임 알리미 <span class="demo">v1 · 시연용 가상 데이터</span></h1>
       <div class="sub" id="asof"></div>
-    </div>
+    </div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <button type="button" id="tvToggle" class="bell" aria-pressed="false" title="사무실 벽걸이 TV용 큰 화면으로 전환합니다">TV 모드</button>
     <button type="button" id="alertToggle" class="bell" aria-pressed="false" title="긴급 상황 시 알림음과 알림을 받습니다">경보음 켜기</button>
@@ -27,13 +27,15 @@
   </header>
   <div id="tvBar" class="tv-bar">
     <span><b id="tvScenario"></b> · <span id="tvClock"></span></span>
-    <span class="tv-keys">키 1~6 상황 전환 · <button type="button" class="tabs-go" id="tvAuto">A 자동 순환</button> <button type="button" class="tabs-go" id="tvExit">종료 (Esc)</button></span>
+    <span class="tv-keys">키 1~7 상황 전환 · <button type="button" class="tabs-go" id="tvAuto">A 자동 순환</button> <button type="button" class="tabs-go" id="tvExit">종료 (Esc)</button></span>
   </div>
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="alertOverlay" class="alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="alertTitle" hidden>
     <div class="alert-card">
+      <div class="alert-head"><div class="alert-gk" id="alertGk" aria-hidden="true"></div><div>
       <p class="alert-level" id="alertLevel"></p>
-      <h2 id="alertTitle"></h2>
+      <h2 id="alertTitle"></h2></div></div>
+      <p class="gk-say" id="alertSay"></p>
       <p id="alertText"></p>
       <p class="alert-meta" id="alertMeta"></p>
       <div class="alert-actions">
@@ -45,19 +47,22 @@
 
   <!-- ① 상황판 -->
   <main id="view-board" class="wrap">
+    <div id="drillRibbon" class="drill-ribbon" role="status" hidden>훈련 상황 · 실제 상황이 아닙니다</div>
     <div class="tabs" id="scenarioTabs" role="group" aria-label="상황 선택"></div>
     <section class="verdict" id="verdict">
-      <div class="lamp" id="lamp" aria-hidden="true"></div>
-      <div><h2 id="vTitle"></h2><p id="vText"></p></div>
+      <div class="gk-art" id="gkArt"></div>
+      <div><h2 id="vTitle"></h2><p id="vText"></p><p class="gk-say" id="gkSay"></p></div>
     </section>
     <div class="grid2" id="systems"></div>
     <section class="panel">
       <div class="ptitle"><h3>업무별 상태</h3><span class="who">국민과 지자체 담당자가 실제로 겪는 영향</span></div>
       <div class="tiles" id="tiles"></div>
-      <div class="legend"><span>● 정상</span><span>▲ 느림·일부 지연</span><span>■ 이용 불가</span><span>◆ 외부 위협</span></div>
+      <div class="legend"><span>● 정상</span><span>▲ 느림·일부 지연</span><span>■ 이용 불가</span><span>◆ 외부 위협</span><span>◇ 훈련</span><span>· 체감속도: 원활 → 보통 → 지체 → 정체</span></div>
     </section>
+    <section class="panel" id="workPanel"></section>
     <section class="panel s-threat" id="threatPanel" hidden></section>
     <section class="panel s-warn" id="regionPanel" hidden></section>
+    <section class="panel s-drill" id="drillPanel" hidden></section>
     <section class="panel" id="boardGolden" hidden></section>
     <section class="panel" id="changesPanel">
       <div class="ptitle"><h3>이렇게 바꿨습니다</h3><span class="who">기존 모니터링 용어 → 누구나 아는 말</span></div>
@@ -71,6 +76,9 @@
           <tr><td>EVENT 빨간 점</td><td>결론 배너 + 업무별 신호등</td><td>무엇이 안 되는지 업무 이름으로 표시</td></tr>
           <tr><td>(없음)</td><td>외부 위협 패널</td><td>해킹 비상 시 점검 항목과 선제 중단 문서를 바로 제시</td></tr>
           <tr><td>(없음)</td><td>골든타임 패널</td><td>장애 시 매뉴얼상 다음 할 일과 보고문을 바로 제시</td></tr>
+          <tr><td>(관제 화면별 상이)</td><td>체감 원활·보통·지체·정체</td><td>KLID 관제 화면과 같은 말로 통일</td></tr>
+          <tr><td>(없음)</td><td>작업관리 현황</td><td>작업 중·직후 지연이면 '작업 영향 가능'을 먼저 알림</td></tr>
+          <tr><td>(없음)</td><td>모의훈련 진행판</td><td>[훈련 상황] 표시로 실제와 구분, 단계별 기록과 종료 보고 자동 작성</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -97,7 +105,7 @@
       </form>
     </section>
     <div class="wrap" style="gap:18px">
-      <section class="panel" id="result"><div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div></section>
+      <section class="panel" id="result"><div class="result-empty"><span class="gk-mini" data-gk="normal"></span><span>왼쪽에서 발생 일시와 안 되는 서비스를 고르면, 골키퍼가 매뉴얼 기준으로 바로 판정해 드려요.</span></div></section>
       <section class="panel" id="intakeGolden" hidden></section>
       <section class="panel" id="deadlinePanel">
         <div class="ptitle"><h3>신고·납부기한 계산</h3><span class="who">지방세기본법 제24조(기한의 특례)</span></div>
@@ -111,6 +119,7 @@
   <main id="view-advisory" class="wrap" hidden>
     <section class="panel s-threat">
       <div class="ptitle"><h3>보안권고문 대조 — 우리 시스템 중 해당될 수 있는 곳은?</h3><span class="who">가상 자산 대장 · 실제 점검 결과 아님</span></div>
+      <div class="gk-row"><span class="gk-mini" data-gk="threat"></span><p class="gk-say">해킹 슛은 미리 막아야죠! 권고문을 우리 시스템과 바로 대조해 볼게요.</p></div>
       <p class="say" style="margin-top:6px">권고문 메일이 오면 사람이 첨부를 열어 버전을 하나씩 비교해야 합니다. 여기서는 버튼 한 번으로 소관 시스템과 대조합니다.</p>
       <div class="tabs" style="margin-top:10px"><button type="button" id="adv-run">권고문 5건 불러와 대조하기</button><button type="button" id="adv-reset">처음으로</button></div>
       <div id="advMail" style="margin-top:12px"></div>
@@ -124,6 +133,7 @@
 <script src="data/rules.js"></script>
 <script src="data/holidays.js"></script>
 <script src="data/advisories.js"></script>
+<script src="data/mascot.js"></script>
 <script src="data/templates.js"></script>
 <script src="data/scenarios.js"></script>
 <script src="js/engine.js"></script>

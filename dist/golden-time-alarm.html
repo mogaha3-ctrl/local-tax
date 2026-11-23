@@ -12,7 +12,7 @@
   --bg:#eef1f5; --panel:#ffffff; --ink:#16202e; --muted:#5b6778; --line:#d5dbe4; --soft:#f5f7fa;
   --navy:#1f3864; --accent:#2e5597; --on-accent:#ffffff;
   --ok:#1f8a4c; --ok-bg:#e3f4ea; --warn:#b26a00; --warn-bg:#fff1d6; --bad:#c0262d; --bad-bg:#fde4e4;
-  --threat:#5b3fa8; --threat-bg:#ece7fa;
+  --threat:#5b3fa8; --threat-bg:#ece7fa; --drill:#0f6e85; --drill-bg:#e0f2f6;
   --font:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
 }
@@ -20,12 +20,12 @@
   --bg:#0f1520; --panel:#172131; --ink:#e7edf5; --muted:#9aa7ba; --line:#2a3850; --soft:#1b2738;
   --navy:#a9c1ea; --accent:#7ea3e6; --on-accent:#0f1520;
   --ok:#4cc483; --ok-bg:#163526; --warn:#f0b04a; --warn-bg:#3a2c12; --bad:#ff6b6f; --bad-bg:#3d1a1d;
-  --threat:#b9a4ff; --threat-bg:#2a2148; color-scheme:dark}}
+  --threat:#b9a4ff; --threat-bg:#2a2148; --drill:#5fd0e6; --drill-bg:#12333b; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1520; --panel:#172131; --ink:#e7edf5; --muted:#9aa7ba; --line:#2a3850; --soft:#1b2738;
   --navy:#a9c1ea; --accent:#7ea3e6; --on-accent:#0f1520;
   --ok:#4cc483; --ok-bg:#163526; --warn:#f0b04a; --warn-bg:#3a2c12; --bad:#ff6b6f; --bad-bg:#3d1a1d;
-  --threat:#b9a4ff; --threat-bg:#2a2148; color-scheme:dark}
+  --threat:#b9a4ff; --threat-bg:#2a2148; --drill:#5fd0e6; --drill-bg:#12333b; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;margin:0;
@@ -48,7 +48,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .lamp{flex:none;width:64px;height:64px;border-radius:50%;background:var(--c);display:grid;place-items:center;color:var(--panel);font-size:1.7rem;font-weight:700;box-shadow:0 0 0 6px var(--cbg),0 0 0 8px var(--c)}
 .verdict h2{margin:0;font-size:1.45rem;color:var(--c);text-wrap:balance}
 .verdict p{margin:4px 0 0;font-size:1rem}
-.s-ok{--c:var(--ok);--cbg:var(--ok-bg)} .s-warn{--c:var(--warn);--cbg:var(--warn-bg)} .s-bad{--c:var(--bad);--cbg:var(--bad-bg)} .s-threat{--c:var(--threat);--cbg:var(--threat-bg)}
+.s-ok{--c:var(--ok);--cbg:var(--ok-bg)} .s-warn{--c:var(--warn);--cbg:var(--warn-bg)} .s-bad{--c:var(--bad);--cbg:var(--bad-bg)} .s-threat{--c:var(--threat);--cbg:var(--threat-bg)} .s-drill{--c:var(--drill);--cbg:var(--drill-bg)}
 
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:18px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
@@ -135,7 +135,7 @@ th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;verti
 th{color:var(--muted);font-weight:600;font-size:.78rem}
 td:first-child{font-family:var(--mono);color:var(--muted)}
 .foot{font-size:.78rem;color:var(--muted)}
-@media (prefers-reduced-motion:no-preference){.s-bad .lamp{animation:pulse 1.6s ease-in-out infinite}}
+
 @keyframes pulse{50%{box-shadow:0 0 0 10px var(--cbg),0 0 0 12px var(--c)}}
 
 /* 긴급 경보(재난문자형) */
@@ -188,15 +188,59 @@ body.tv .tile span{font-size:.85rem}
 body.tv .kpi .v{font-size:1.7rem;white-space:nowrap}
 body.tv .spark{display:none}
 
+/* DDoS 모의훈련 — 실제 상황과 구분되는 줄무늬 띠 */
+.drill-ribbon{text-align:center;font-weight:700;letter-spacing:.12em;color:var(--on-accent);padding:8px 12px;border-radius:8px;
+  background:repeating-linear-gradient(-45deg,var(--drill) 0 18px,color-mix(in srgb,var(--drill) 80%,#000) 18px 36px)}
+.dsteps{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.dsteps li{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:6px}
+.dsteps li.done{background:var(--drill-bg);border-color:var(--drill)}
+.dsteps .t{font-family:var(--mono);font-weight:600}
+.dsteps .d{font-size:.8rem;color:var(--muted)}
+.dsteps button{font:inherit;font-size:.8rem;cursor:pointer;border:1px solid var(--drill);color:var(--drill);background:transparent;border-radius:6px;padding:4px 10px;white-space:nowrap}
+.dsteps li.done button{background:var(--drill);color:var(--on-accent)}
+body.tv #drillPanel,body.tv #workPanel{display:none!important}
+
+/* 캐릭터 「골키퍼」(골든타임 키퍼) — data/mascot.js */
+.brand{display:flex;gap:10px;align-items:center}
+.brand-gk svg{display:block}
+.gk-art{flex:none;width:120px;height:120px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.08))}
+.gk-art svg{display:block;width:100%;height:100%}
+.gk-say{position:relative;display:inline-block;margin:10px 0 0!important;padding:8px 14px;border-radius:14px;background:var(--panel);border:2px solid var(--c,var(--navy));font-size:.95rem;line-height:1.45;color:var(--ink)}
+.gk-say b{color:var(--c,var(--navy));margin-right:4px}
+.verdict .gk-say::before{content:"";position:absolute;left:-9px;top:14px;width:14px;height:14px;background:var(--panel);border-left:2px solid var(--c);border-bottom:2px solid var(--c);transform:rotate(45deg)}
+.gk-mini{flex:none;display:inline-block;line-height:0}
+.gk-row{display:flex;gap:10px;align-items:center;margin-top:8px}
+.gk-row .gk-say{margin:0!important;--c:var(--threat)}
+.result-empty{display:flex;gap:12px;align-items:center;justify-content:center;text-align:left}
+.alert-head{display:flex;gap:14px;align-items:center}
+.alert-gk{flex:none;width:104px;height:104px}
+.alert-card .gk-say{--c:var(--lv);justify-self:start}
+.lv-info{--lv:var(--warn)} .lv-drill{--lv:var(--drill)}
+.toast:not([hidden]){display:flex;gap:10px;align-items:center}
+@media (prefers-reduced-motion:no-preference){
+  .gk-art[data-state="bad"] svg,.alert-gk[data-state="bad"] svg{animation:gkhop 1.2s ease-in-out infinite;transform-origin:50% 90%}
+  .gk-art[data-state="threat"] svg,.alert-gk[data-state="threat"] svg{animation:gkdive 2.4s ease-in-out infinite;transform-origin:50% 90%}
+  .gk-art[data-state="warn"] svg,.gk-art[data-state="region"] svg{animation:gksway 3s ease-in-out infinite;transform-origin:50% 90%}
+  .gk-art[data-state="normal"] svg{animation:gkbreathe 4s ease-in-out infinite;transform-origin:50% 90%}
+}
+@keyframes gkhop{50%{transform:translateY(-6px)}}
+@keyframes gkdive{40%,60%{transform:translateX(4px) rotate(4deg)}}
+@keyframes gksway{50%{transform:rotate(-3deg)}}
+@keyframes gkbreathe{50%{transform:scale(1.025)}}
+body.tv .gk-art{width:min(18vw,200px);height:min(18vw,200px)}
+body.tv .gk-say{font-size:1rem}
+@media (max-width:560px){.verdict{align-items:flex-start;gap:10px;padding:16px}.gk-art{width:64px;height:64px}.verdict .gk-say::before{display:none}.alert-gk{width:72px;height:72px}}
+
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
+    <div class="brand"><span class="brand-gk" id="brandGk" aria-hidden="true"></span><div>
       <h1>지방세시스템 골든타임 알리미 <span class="demo">v1 · 시연용 가상 데이터</span></h1>
       <div class="sub" id="asof"></div>
-    </div>
+    </div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
     <button type="button" id="tvToggle" class="bell" aria-pressed="false" title="사무실 벽걸이 TV용 큰 화면으로 전환합니다">TV 모드</button>
     <button type="button" id="alertToggle" class="bell" aria-pressed="false" title="긴급 상황 시 알림음과 알림을 받습니다">경보음 켜기</button>
@@ -209,13 +253,15 @@ body.tv .spark{display:none}
   </header>
   <div id="tvBar" class="tv-bar">
     <span><b id="tvScenario"></b> · <span id="tvClock"></span></span>
-    <span class="tv-keys">키 1~6 상황 전환 · <button type="button" class="tabs-go" id="tvAuto">A 자동 순환</button> <button type="button" class="tabs-go" id="tvExit">종료 (Esc)</button></span>
+    <span class="tv-keys">키 1~7 상황 전환 · <button type="button" class="tabs-go" id="tvAuto">A 자동 순환</button> <button type="button" class="tabs-go" id="tvExit">종료 (Esc)</button></span>
   </div>
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="alertOverlay" class="alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="alertTitle" hidden>
     <div class="alert-card">
+      <div class="alert-head"><div class="alert-gk" id="alertGk" aria-hidden="true"></div><div>
       <p class="alert-level" id="alertLevel"></p>
-      <h2 id="alertTitle"></h2>
+      <h2 id="alertTitle"></h2></div></div>
+      <p class="gk-say" id="alertSay"></p>
       <p id="alertText"></p>
       <p class="alert-meta" id="alertMeta"></p>
       <div class="alert-actions">
@@ -227,19 +273,22 @@ body.tv .spark{display:none}
 
   <!-- ① 상황판 -->
   <main id="view-board" class="wrap">
+    <div id="drillRibbon" class="drill-ribbon" role="status" hidden>훈련 상황 · 실제 상황이 아닙니다</div>
     <div class="tabs" id="scenarioTabs" role="group" aria-label="상황 선택"></div>
     <section class="verdict" id="verdict">
-      <div class="lamp" id="lamp" aria-hidden="true"></div>
-      <div><h2 id="vTitle"></h2><p id="vText"></p></div>
+      <div class="gk-art" id="gkArt"></div>
+      <div><h2 id="vTitle"></h2><p id="vText"></p><p class="gk-say" id="gkSay"></p></div>
     </section>
     <div class="grid2" id="systems"></div>
     <section class="panel">
       <div class="ptitle"><h3>업무별 상태</h3><span class="who">국민과 지자체 담당자가 실제로 겪는 영향</span></div>
       <div class="tiles" id="tiles"></div>
-      <div class="legend"><span>● 정상</span><span>▲ 느림·일부 지연</span><span>■ 이용 불가</span><span>◆ 외부 위협</span></div>
+      <div class="legend"><span>● 정상</span><span>▲ 느림·일부 지연</span><span>■ 이용 불가</span><span>◆ 외부 위협</span><span>◇ 훈련</span><span>· 체감속도: 원활 → 보통 → 지체 → 정체</span></div>
     </section>
+    <section class="panel" id="workPanel"></section>
     <section class="panel s-threat" id="threatPanel" hidden></section>
     <section class="panel s-warn" id="regionPanel" hidden></section>
+    <section class="panel s-drill" id="drillPanel" hidden></section>
     <section class="panel" id="boardGolden" hidden></section>
     <section class="panel" id="changesPanel">
       <div class="ptitle"><h3>이렇게 바꿨습니다</h3><span class="who">기존 모니터링 용어 → 누구나 아는 말</span></div>
@@ -253,6 +302,9 @@ body.tv .spark{display:none}
           <tr><td>EVENT 빨간 점</td><td>결론 배너 + 업무별 신호등</td><td>무엇이 안 되는지 업무 이름으로 표시</td></tr>
           <tr><td>(없음)</td><td>외부 위협 패널</td><td>해킹 비상 시 점검 항목과 선제 중단 문서를 바로 제시</td></tr>
           <tr><td>(없음)</td><td>골든타임 패널</td><td>장애 시 매뉴얼상 다음 할 일과 보고문을 바로 제시</td></tr>
+          <tr><td>(관제 화면별 상이)</td><td>체감 원활·보통·지체·정체</td><td>KLID 관제 화면과 같은 말로 통일</td></tr>
+          <tr><td>(없음)</td><td>작업관리 현황</td><td>작업 중·직후 지연이면 '작업 영향 가능'을 먼저 알림</td></tr>
+          <tr><td>(없음)</td><td>모의훈련 진행판</td><td>[훈련 상황] 표시로 실제와 구분, 단계별 기록과 종료 보고 자동 작성</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -279,7 +331,7 @@ body.tv .spark{display:none}
       </form>
     </section>
     <div class="wrap" style="gap:18px">
-      <section class="panel" id="result"><div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div></section>
+      <section class="panel" id="result"><div class="result-empty"><span class="gk-mini" data-gk="normal"></span><span>왼쪽에서 발생 일시와 안 되는 서비스를 고르면, 골키퍼가 매뉴얼 기준으로 바로 판정해 드려요.</span></div></section>
       <section class="panel" id="intakeGolden" hidden></section>
       <section class="panel" id="deadlinePanel">
         <div class="ptitle"><h3>신고·납부기한 계산</h3><span class="who">지방세기본법 제24조(기한의 특례)</span></div>
@@ -293,6 +345,7 @@ body.tv .spark{display:none}
   <main id="view-advisory" class="wrap" hidden>
     <section class="panel s-threat">
       <div class="ptitle"><h3>보안권고문 대조 — 우리 시스템 중 해당될 수 있는 곳은?</h3><span class="who">가상 자산 대장 · 실제 점검 결과 아님</span></div>
+      <div class="gk-row"><span class="gk-mini" data-gk="threat"></span><p class="gk-say">해킹 슛은 미리 막아야죠! 권고문을 우리 시스템과 바로 대조해 볼게요.</p></div>
       <p class="say" style="margin-top:6px">권고문 메일이 오면 사람이 첨부를 열어 버전을 하나씩 비교해야 합니다. 여기서는 버튼 한 번으로 소관 시스템과 대조합니다.</p>
       <div class="tabs" style="margin-top:10px"><button type="button" id="adv-run">권고문 5건 불러와 대조하기</button><button type="button" id="adv-reset">처음으로</button></div>
       <div id="advMail" style="margin-top:12px"></div>
@@ -392,7 +445,8 @@ window.RULES = {
   alerts: {
     critical: { name: '위급', sound: 'rise',     soundLabel: '상승 알림음(띵띵띵띵)', flash: true },
     urgent:   { name: '긴급', sound: 'dingdong', soundLabel: '띵동 알림음', flash: false },
-    info:     { name: '안전안내', sound: null, flash: false },
+    info:     { name: '안전안내', sound: null, flash: false, toast: true },
+    drill:    { name: '훈련', sound: 'drill', soundLabel: '훈련 알림음(띵 띵)', flash: false, toast: true }, // 모의훈련: 실제 경보와 구분
   },
   // 선율: [음이름, 길이(초)], 'r' = 쉼표. timbre: bell(종) / strings(현악)
   //  위급은 올라가며 빠르게 반복, 긴급은 내려오며 천천히 두 번 — 방향이 반대라 듣자마자 구분됩니다
@@ -401,10 +455,11 @@ window.RULES = {
                 notes: [['C5', 0.11], ['E5', 0.11], ['G5', 0.11], ['C6', 0.3], ['r', 0.12], ['C5', 0.11], ['E5', 0.11], ['G5', 0.11], ['C6', 0.6]] },
     dingdong: { timbre: 'bell', vol: 0.2, repeat: 1, gap: 0, // 라→파 "띵-동, 띵-동"
                 notes: [['A5', 0.3], ['F5', 0.6], ['r', 0.25], ['A5', 0.3], ['F5', 1.0]] },
+    drill:    { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['E5', 0.16], ['r', 0.12], ['E5', 0.4]] }, // 훈련: 같은 음 두 번, 짧게
     hello:    { timbre: 'bell', vol: 0.14, repeat: 1, gap: 0, notes: [['G5', 0.28], ['E5', 0.7]] }, // 경보음 켤 때 확인음
   },
   // 판정 유형·상황판 상태 → 경보 단계
-  alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info' } },
+  alertMap: { type: { 1: 'critical', 2: 'urgent', 3: 'info' }, board: { bad: 'critical', threat: 'urgent', warn: 'info', drill: 'drill' } },
 
   // 기한 특례(지방세기본법 §24)
   deadline: {
@@ -427,7 +482,19 @@ window.RULES = {
       client:  { name: '단말·프로그램 설치 문제 의심', who: '지자체 담당·KLID', ask: '단말 브라우저·프로그램 설치·캐시 점검 및 접속 기록 확인', action: '다른 시스템은 정상입니다. 단말 브라우저·프로그램 설치·캐시를 점검하고, KLID에 해당 접속 기록을 확인 요청하세요.' },
     },
   },
+
+  // 체감속도 4단계 — KLID 관제 화면과 같은 말(원활·보통·지체·정체). 응답시간 경계값은 제안값(TODO 확인)
+  speed: {
+    byLevel: { ok: '원활', warn: '지체', bad: '정체', threat: '원활', drill: '보통' },
+    bands: [{ upTo: 1.5, name: '원활', lv: 'ok' }, { upTo: 2.0, name: '보통', lv: 'ok' }, { upTo: 3.0, name: '지체', lv: 'warn' }, { upTo: Infinity, name: '정체', lv: 'bad' }],
+  },
+  // 작업관리 현황 — 지연·장애가 작업 중이거나 작업 직후(recentHours 이내)면 '작업 영향 가능'을 먼저 표시
+  work: {
+    types: ['정기점검', '업데이트', '장애조치'], recentHours: 12,
+    hint: '진행 중이거나 막 끝난 작업이 있습니다. 작업 담당에게 먼저 확인하고, 필요하면 작업 중단·되돌리기(롤백)를 검토하세요.',
+  },
 };
+
 
 </script>
 <script>
@@ -443,6 +510,7 @@ window.HOLIDAYS_FALLBACK = {
     '2026-09-25', '2026-09-26', '2026-10-05', '2026-10-09', '2026-12-25',
   ],
 };
+
 
 </script>
 <script>
@@ -481,6 +549,112 @@ window.INVENTORY = [
   ['지방세 통계·조회 포털(프레임워크)', '공무원용', 'laravel', '10.48'],
   ['민간앱 환급 연계 서버', '외부 접속', 'node', '20.11'],
 ];
+
+
+</script>
+<script>
+/*
+ * 캐릭터 「골키퍼」(골든타임 키퍼) — 지방세시스템의 골든타임을 지키는 수문장
+ * - 직접 그린 원본 캐릭터(SVG). 화면·슬라이드·영상에서 같은 그림을 씁니다.
+ * - 상황판 7개 화면과 1:1: normal·warn·bad·threat·breach·region·drill (+ hero 대표 이미지)
+ * - 영상용 개별 파일: node tools/export-mascot.js → assets/mascot/*.svg
+ * - 설정집(말투·대사·영상 활용): docs/mascot.md
+ */
+(function () {
+  const GOLD = '#F7C531', GOLDD = '#c98c00', NAVY = '#1f3a6b', GLOVE = '#8fd14f', GLOVED = '#4f8f1f', INK = '#1f2a44';
+
+  const net = () => {
+    let s = '<g opacity=".35" stroke="#9aa6b8" stroke-width="2" fill="none"><path d="M30 200 V60 H210 V200"/>';
+    for (let x = 50; x < 210; x += 20) s += `<line x1="${x}" y1="60" x2="${x}" y2="200"/>`;
+    for (let y = 80; y < 200; y += 20) s += `<line x1="30" y1="${y}" x2="210" y2="${y}"/>`;
+    return s + '</g>';
+  };
+  const mitt = (x, y, r = 22, ang = 0) =>
+    `<g transform="rotate(${ang} ${x} ${y})"><rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r + 6}" rx="${r * 0.8}" fill="${GLOVE}" stroke="${GLOVED}" stroke-width="4"/>` +
+    `<rect x="${x - r + 4}" y="${y + r - 4}" width="${2 * r - 8}" height="10" rx="3" fill="#fff" stroke="${GLOVED}" stroke-width="3"/>` +
+    `<line x1="${x - 6}" y1="${y - r + 6}" x2="${x - 6}" y2="${y}" stroke="${GLOVED}" stroke-width="3"/><line x1="${x + 6}" y1="${y - r + 6}" x2="${x + 6}" y2="${y}" stroke="${GLOVED}" stroke-width="3"/></g>`;
+  const eyes = ({ dx = 0, dy = 0, r = 9, brow = null, squint = false } = {}) => {
+    let s = '';
+    for (const cx of [96, 144]) {
+      s += squint
+        ? `<path d="M${cx - 10} 112 Q${cx} 104 ${cx + 10} 112" stroke="${INK}" stroke-width="5" fill="none" stroke-linecap="round"/>`
+        : `<circle cx="${cx + dx}" cy="${110 + dy}" r="${r}" fill="${INK}"/><circle cx="${cx + dx + 3}" cy="${106 + dy}" r="3" fill="#fff"/>`;
+    }
+    if (brow === 'angry') s += `<path d="M84 94 L106 100 M156 94 L134 100" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+    if (brow === 'worry') s += `<path d="M84 98 L106 92 M156 98 L134 92" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+    return s;
+  };
+  const blush = '<ellipse cx="80" cy="132" rx="11" ry="6" fill="#f39a7a" opacity=".7"/><ellipse cx="160" cy="132" rx="11" ry="6" fill="#f39a7a" opacity=".7"/>';
+  const smile = `<path d="M106 134 Q120 148 134 134" stroke="${INK}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  const flat = `<path d="M108 138 H132" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+  const wavy = `<path d="M104 140 q6 -6 12 0 q6 6 12 0 q6 -6 8 0" stroke="${INK}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  const shout = `<ellipse cx="120" cy="140" rx="13" ry="11" fill="${INK}"/><ellipse cx="120" cy="145" rx="7" ry="4" fill="#e66"/>`;
+  const sweat = '<path d="M178 82 q8 12 0 18 q-8 -6 0 -18z" fill="#7cc4ff" stroke="#3b8fd6" stroke-width="2"/>';
+  const sweat2 = '<path d="M62 92 q6 9 0 14 q-6 -5 0 -14z" fill="#7cc4ff" stroke="#3b8fd6" stroke-width="2"/>';
+
+  // 몸통: 금빛 공 + 유니폼(등번호) + 배의 골든타임 시계
+  const body = (face, mitts, { front = '', rot = 0, jersey = NAVY, num = '1' } = {}) => {
+    const big = num.length === 1;
+    return `<g transform="rotate(${rot} 120 140)"><ellipse cx="120" cy="222" rx="62" ry="8" fill="#0002"/>` +
+      `<circle cx="120" cy="135" r="72" fill="${GOLD}"/>` +
+      `<path d="M50.04 152 H189.96 A72 72 0 0 1 50.04 152 Z" fill="${jersey}"/>` +
+      `<circle cx="120" cy="135" r="72" fill="none" stroke="${GOLDD}" stroke-width="5"/>` +
+      `<text x="${big ? 120 : 106}" y="196" font-size="${big ? 30 : 20}" font-weight="800" fill="#fff" text-anchor="middle" font-family="sans-serif">${num}</text>` +
+      `<circle cx="150" cy="172" r="9" fill="#fff"/><line x1="150" y1="172" x2="150" y2="166" stroke="${INK}" stroke-width="2"/><line x1="150" y1="172" x2="154" y2="174" stroke="${INK}" stroke-width="2"/>` +
+      face + mitts + front + '</g>';
+  };
+  const virus = (x, y) => {
+    let s = '<g>';
+    for (let a = 0; a < 360; a += 45) {
+      const ax = (x + 26 * Math.cos(a * Math.PI / 180)).toFixed(1), ay = (y + 26 * Math.sin(a * Math.PI / 180)).toFixed(1);
+      s += `<line x1="${x}" y1="${y}" x2="${ax}" y2="${ay}" stroke="#b91c1c" stroke-width="4"/><circle cx="${ax}" cy="${ay}" r="4" fill="#b91c1c"/>`;
+    }
+    return s + `<circle cx="${x}" cy="${y}" r="18" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/><text x="${x}" y="${y + 5}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle" font-family="sans-serif">PHP</text></g>`;
+  };
+  const lock = `<g><path d="M106 182 v-14 a14 14 0 0 1 28 0 v14" stroke="${INK}" stroke-width="6" fill="none"/><rect x="98" y="180" width="44" height="34" rx="6" fill="#facc15" stroke="${INK}" stroke-width="4"/><circle cx="120" cy="195" r="5" fill="${INK}"/></g>`;
+  const pin = '<g><path d="M200 40 a22 22 0 0 1 22 22 c0 18 -22 38 -22 38 s-22 -20 -22 -38 a22 22 0 0 1 22 -22z" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/><circle cx="200" cy="62" r="8" fill="#fff"/></g><text x="34" y="60" font-size="40" font-weight="800" fill="#6b7280" font-family="sans-serif">?</text>';
+  const whistle = `<g><rect x="126" y="134" width="30" height="16" rx="6" fill="#d1d5db" stroke="${INK}" stroke-width="3"/><circle cx="158" cy="142" r="10" fill="#d1d5db" stroke="${INK}" stroke-width="3"/></g>`;
+  const cone = '<g><path d="M200 218 L214 160 L228 218Z" fill="#fb923c" stroke="#c2410c" stroke-width="3"/><rect x="194" y="214" width="40" height="8" rx="2" fill="#c2410c"/><rect x="207" y="186" width="14" height="6" fill="#fff"/></g>';
+  const alarm = '<path d="M30 70 l-16 -10 M26 96 h-20 M210 70 l16 -10 M214 96 h20" stroke="#ef4444" stroke-width="6" stroke-linecap="round"/>';
+  const spark = '<path d="M172 30 l-8 -10 M190 20 l-2 -14 M226 30 l8 -10" stroke="#F2B61F" stroke-width="5" stroke-linecap="round"/>';
+
+  const ART = {
+    hero: () => net() + body(eyes() + blush + smile, mitt(46, 150, 24, -20) + mitt(194, 150, 24, 20)),
+    normal: () => body(eyes() + blush + smile, mitt(52, 160, 20, -10) + mitt(196, 96, 20, 15)),
+    warn: () => body(eyes({ brow: 'worry' }) + blush + wavy + sweat, mitt(70, 178, 20, 0) + mitt(170, 178, 20, 0)),
+    bad: () => body(eyes({ r: 11, brow: 'worry' }) + shout, mitt(48, 72, 22, -25) + mitt(192, 72, 22, 25)) + alarm,
+    threat: () => net() + body(eyes({ dx: 6, brow: 'angry' }) + flat, mitt(205, 92, 24, 30) + mitt(70, 170, 20, -20), { rot: -14 }) + virus(204, 52) + spark,
+    breach: () => body(eyes({ squint: true, brow: 'angry' }) + flat + sweat + sweat2, mitt(84, 196, 18, 0) + mitt(156, 196, 18, 0), { front: lock }),
+    region: () => body(eyes({ dx: 8, dy: -4 }) + blush + flat, mitt(56, 160, 20, -10) + mitt(186, 120, 20, 25)) + pin,
+    drill: () => body(eyes() + blush + whistle, mitt(52, 160, 20, -10) + mitt(160, 186, 18, 0), { jersey: '#7c3aed', num: '훈련' }) + cone,
+  };
+
+  window.MASCOT = {
+    name: '골키퍼',
+    full: '골든타임 키퍼',
+    motto: '골든타임, 제가 막습니다!',
+    // 상황별 대사(화면 말풍선·영상 내레이션 공통)
+    states: {
+      hero: { label: '대표', shape: '', line: '골든타임, 제가 막습니다!', pose: '양손 장갑 · 골대 앞' },
+      normal: { label: '평상시', shape: '●', line: '오늘도 무실점! 이상 없어요.', pose: '엄지 척 · 여유' },
+      warn: { label: '처리 지연 주의', shape: '▲', line: '공이 느려졌어요… 지켜보는 중!', pose: '식은땀 · 준비 자세' },
+      bad: { label: '장애 상황', shape: '■', line: '비상! 골든타임 시작! 할 일을 순서대로 알려드릴게요.', pose: '두 팔 번쩍 · 경보' },
+      threat: { label: '외부 위협(해킹)', shape: '◆', line: '해킹 슛, 선방합니다! 서버는 끄지 말고 외부 접속만 막아요.', pose: '다이빙 세이브' },
+      breach: { label: '계정 공격 의심', shape: '◆', line: '수상한 로그인, 문 잠가요!', pose: '실눈 · 식은땀 · 자물쇠' },
+      region: { label: '지역 접속 불량', shape: '▲', line: '어느 지역이 안 되는지 먼저 볼게요.', pose: '두리번 · 위치 핀' },
+      drill: { label: '모의훈련', shape: '◇', line: '실전처럼 훈련 중! 실제 상황 아니에요.', pose: '호루라기 · 훈련 조끼' },
+    },
+    // 상황판 시나리오 키 → 캐릭터 상태
+    byScenario: { normal: 'normal', now: 'warn', threat: 'threat', breach: 'breach', region: 'region', drill: 'drill', out: 'bad' },
+    byLevel: { ok: 'normal', warn: 'warn', bad: 'bad', threat: 'threat', drill: 'drill' },
+    svg(state, size = 120, title) {
+      const art = (ART[state] || ART.hero)();
+      const t = title || `${this.name} — ${(this.states[state] || this.states.hero).label}`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 240 240" role="img" aria-label="${t}"><title>${t}</title>${art}</svg>`;
+    },
+  };
+})();
+
 
 </script>
 <script>
@@ -560,6 +734,46 @@ window.REGION_TEMPLATES = [
 ㅇ 원인 판단 : {{causeName}} — {{who}} 점검 요청
 ㅇ 현재 : 정상 확인 {{okCount}}곳, 확인·처리 중 {{pendingCount}}곳
 ㅇ 격상 기준 : {{escalateText}}`,
+  },
+];
+
+// DDoS 모의훈련 문서 — 실제 상황과 헷갈리지 않도록 [훈련 상황]을 맨 앞에 붙입니다
+window.DRILL_TEMPLATES = [
+  {
+    id: 'drillStart', name: '훈련 시작 공지', to: 'KLID·지자체 공유방 · 관계기관',
+    body:
+`[훈련 상황] {{dateText}} {{start}}부터 지방세(위택스) 홈페이지 대상 {{orgShort}} 합동 DDoS 모의훈련을 실시합니다.
+※ 실제 상황이 아닙니다.
+• 훈련 중 접속 지연 문의가 있으면 훈련 상황임을 안내해 주세요.
+• 훈련과 무관한 이상 징후는 이 방에 바로 알려 주세요.`,
+  },
+  {
+    id: 'drillEnd', name: '훈련 종료 보고', to: '과장 · 국장 · 공유방',
+    body:
+`[훈련 종료 보고] 금일 지방세(위택스) 홈페이지 대상 {{orgShort}} 합동 DDoS 모의훈련은 계획된 시나리오에 맞춰 공격이 있었고,
+DDoS 장비 탐지와 방어가 {{defense}}.
+온라인 대국민 서비스는 {{service}}.
+{{endLine}}
+ㅇ 주요 기록 : 공격 시작 후 탐지 {{detectMin}}, 차단 {{blockMin}}, 전체 소요 {{totalMin}}
+(※ 결과보고서는 {{reportDue}} 예정입니다.)`,
+  },
+  {
+    id: 'drillPaper', name: '결과보고서 틀', to: '내부 보고',
+    body:
+`□ 개요
+ ○ 훈련명 : {{name}}
+ ○ 일시 : {{dateText}} {{start}} ~ {{end}}
+ ○ 참여 : {{org}}
+□ 진행 결과
+{{timeline}}
+ ○ 탐지·방어 : {{defense}}
+ ○ 서비스 영향 : {{service}}
+□ 평가
+ ○ 공격 시작 후 탐지 {{detectMin}}, 차단 {{blockMin}}, 전체 소요 {{totalMin}}
+□ 개선 과제
+ ○ (훈련 중 확인된 보완 사항 작성)
+□ 향후 계획
+ ○ 결과 공유 및 다음 훈련 일정 협의`,
   },
 ];
 
@@ -670,6 +884,7 @@ window.THREAT_TEMPLATES = [
   },
 ];
 
+
 </script>
 <script>
 /*
@@ -706,6 +921,7 @@ window.SCENARIOS = {
         k: [['지금 이용자', '2,552명', '오늘 최고 2,889명'], ['1초 처리량', '581건', '최근 최고 618건'], ['오래 멈춘 요청', '30%', '기준 20% 초과']], kc: ['ok', 'ok', 'warn'] },
     ],
     tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['압류 해제', 'ok'], ['국세·등기 연계', 'ok'], ['공무원 업무 처리', 'warn', '일부 지연']],
+    work: [{ type: '정기점검', name: '재산세 대장정비 통계 배치', time: '10:00~11:00', status: '진행 중' }],
   },
   threat: {
     tab: '외부 위협',
@@ -810,8 +1026,41 @@ window.SCENARIOS = {
         ['C군', '2026-11-06T09:15', '프로그램 접속 안 됨', 'warn', '접속 확인 중', true],
         ['D시', '2026-11-06T09:30', '로딩이 오래 걸림', 'warn', '네트워크 점검 요청', false],
       ],
+      // 지역별 체감 하위 5곳 [권역, 평균 응답(초, 최근 5분)] — 가상 예시
+      slowest: [['가 권역(A군·B군·C군·D시)', 4.6], ['나 권역', 1.7], ['다 권역', 1.4], ['라 권역', 1.3], ['마 권역', 1.2]],
       priorNote: '3일 전(11.3.)에도 같은 권역 2곳(A군·C군)에서 로딩 지연 신고가 있었습니다.',
       defaults: { central: true, others: true, sameArea: true },
+    },
+  },
+  drill: {
+    tab: 'DDoS 모의훈련',
+    asof: 'DDoS 합동 모의훈련 시연 · 가상 데이터',
+    level: 'drill', title: '[훈련 상황] 위택스 DDoS 합동 모의훈련 진행 중 — 실제 상황 아님',
+    text: '국가정보자원관리원·한국지역정보개발원 합동 DDoS 모의훈련입니다. 계획된 시나리오에 따라 공격 트래픽이 들어오고 있으며, 대국민 서비스는 정상입니다.',
+    sys: [
+      { name: '국민용 · 위택스', who: '훈련 대상 홈페이지', level: 'drill', curve: 'pub',
+        say: '훈련 공격 트래픽을 방어 장비가 걸러내고 있습니다. 실제 이용자 접속은 원활합니다.',
+        k: [['유입 트래픽', '평소의 40배', '훈련 공격 포함'], ['차단율', '99.8%', '공격 트래픽 기준'], ['느린 요청', '0%', '3초 이상']], kc: ['drill', 'ok', 'ok'] },
+      { name: '공무원용 · 세무행정', who: '부과·징수·체납 업무', level: 'ok', curve: 'int',
+        say: '훈련과 무관하게 정상 처리 중입니다.',
+        k: [['지금 이용자', '2,590명', '평소와 비슷'], ['1초 처리량', '676건', '평소의 97%'], ['오래 멈춘 요청', '2%', '60초 이상']] },
+    ],
+    tiles: [['지방세 신고', 'ok'], ['지방세 납부', 'ok'], ['증명서 발급', 'ok'], ['압류 해제', 'ok'], ['DDoS 방어', 'drill', '탐지·차단 정상'], ['모의훈련', 'drill', '진행 중']],
+    drill: {
+      name: '위택스 대상 DDoS 합동 모의훈련',
+      org: '국가정보자원관리원·한국지역정보개발원·지방세입정보과',
+      date: '2026-11-12', reportDue: '다음 주 중',
+      // [id, 단계, 확인할 것, 시각(가상), 시연 시작 시 완료 여부]
+      steps: [
+        ['notice', '훈련 시작 공지', '관계기관·공유방에 [훈련 상황] 사전 알림', '14:00', true],
+        ['attack', '공격 시작', '계획된 시나리오대로 공격 트래픽 유입', '14:05', true],
+        ['detect', '탐지', 'DDoS 방어 장비가 공격 탐지', '14:06', true],
+        ['block', '차단·방어', '공격 트래픽 차단, 정상 이용자 접속 유지', '14:08', true],
+        ['service', '서비스 영향 확인', '위택스 신고·납부·증명 발급 정상 여부', '14:20', false],
+        ['end', '최종 정상 확인·훈련 종료', '서비스 정상 여부 최종 확인 후 종료 선언', '14:40', false],
+        ['report', '종료 보고', '공유방·보고 라인에 종료 보고', '14:45', false],
+        ['paper', '결과보고서', '다음 주 중 제출(개선 과제 포함)', '—', false],
+      ],
     },
   },
   out: {
@@ -829,9 +1078,11 @@ window.SCENARIOS = {
     ],
     tiles: [['지방세 신고', 'bad', '이용 불가'], ['지방세 납부', 'warn', '일부 재개'], ['증명서 발급', 'bad', '이용 불가'], ['압류 해제', 'bad', '이용 불가'], ['국세·등기 연계', 'bad', '이용 불가'], ['환급', 'bad', '이용 불가']],
     // 이 시나리오는 '장애 접수' 화면에 아래 값을 채워 골든타임을 보여줍니다
+    work: [{ type: '업데이트', name: '프로그램 업데이트(전날 야간)', time: '전날 21:00~24:00', status: '완료', endedHoursAgo: 9 }],
     incident: { start: '2026-11-04T09:00', services: ['acq', 'pay', 'cert', 'seize', 'family', 'refund'], scope: 'national', full: true, cause: 'internal', media: true, elapsed: 35 },
   },
 };
+
 
 </script>
 <script>
@@ -1012,19 +1263,48 @@ window.SCENARIOS = {
     return null;
   }
 
-  const api = { classify, timeline, deadline, fill, fullText, hm, ymd, addMin, diagnoseRegion, vcmp, matchAdvisory };
+  /**
+   * 모의훈련 기록 — steps = [{ id, time:'HH:MM'|'', done }]
+   * 공격 시작(attack) 기준 탐지·차단까지 걸린 분, 공지(notice)~종료(end) 전체 소요
+   */
+  function drillMetrics(steps) {
+    const at = (id) => { const s = steps.find((x) => x.id === id && x.done && /^\d\d:\d\d$/.test(x.time)); if (!s) return null; const [h, m] = s.time.split(':').map(Number); return h * 60 + m; };
+    const gap = (a, b) => (at(a) == null || at(b) == null ? null : at(b) - at(a));
+    return { detect: gap('attack', 'detect'), block: gap('attack', 'block'), total: gap('notice', 'end'),
+      done: steps.filter((s) => s.done).length, all: steps.length };
+  }
+
+  /** 체감속도: 응답시간(초) → 원활·보통·지체·정체 */
+  function speedLevel(sec, bands) { return bands.find((b) => sec <= b.upTo) || bands[bands.length - 1]; }
+  /** 지역별 체감 하위 목록(느린 순) → 한 권역 몰림: 1위만 지체·정체이고 나머지는 원활·보통 */
+  function regionConcentrated(list, bands) {
+    const lv = list.map((r) => speedLevel(r.sec, bands).lv);
+    return lv[0] !== 'ok' && lv.slice(1).every((x) => x === 'ok');
+  }
+  /** 작업 영향 가능: 상태가 주의·장애이고, 진행 중이거나 recentHours 안에 끝난 작업이 있으면 그 작업 목록 */
+  function workImpact(level, works, rules) {
+    if (!['warn', 'bad'].includes(level)) return null;
+    const hit = works.filter((w) => w.status === '진행 중' || (w.endedHoursAgo != null && w.endedHoursAgo <= rules.work.recentHours));
+    return hit.length ? hit : null;
+  }
+
+  const api = { speedLevel, regionConcentrated, workImpact, drillMetrics, classify, timeline, deadline, fill, fullText, hm, ymd, addMin, diagnoseRegion, vcmp, matchAdvisory };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
+
 
 </script>
 <script>
 /* 화면 동작 — 판정 계산은 engine.js, 기준값은 data/*.js 에 있습니다. */
 (function () {
-  const R = window.RULES, E = window.Engine, S = window.SCENARIOS;
+  const R = window.RULES, E = window.Engine, S = window.SCENARIOS, M = window.MASCOT;
+  // 캐릭터 「골키퍼」: data-gk 자리에 상황별 그림을 채움
+  const gkFill = (root = document) => root.querySelectorAll('[data-gk]').forEach((el) => (el.innerHTML = M.svg(el.dataset.gk, el.dataset.size || 56)));
+  const gkSay = (st, line) => `<b>${M.states[st].shape} ${M.name}</b> ${esc(line || M.states[st].line)}`;
   const $ = (id) => document.getElementById(id);
-  const LABEL = { ok: '정상', warn: '주의', bad: '장애', threat: '외부 위협' };
-  const ICON = { ok: '●', warn: '▲', bad: '■', threat: '◆' };
-  const TILE_TXT = { ok: '정상', warn: '지연', bad: '이용 불가', threat: '주의' };
+  const LABEL = { ok: '정상', warn: '주의', bad: '장애', threat: '외부 위협', drill: '훈련' };
+  const ICON = { ok: '●', warn: '▲', bad: '■', threat: '◆', drill: '◇' };
+  const TILE_TXT = { ok: '정상', warn: '지연', bad: '이용 불가', threat: '주의', drill: '훈련 중' };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const store = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
@@ -1187,7 +1467,9 @@ window.SCENARIOS = {
   const regionState = {};
   function renderRegion(sc) {
     const el = $('regionPanel'), g = sc.region, Q = R.region.questions;
-    const st = (regionState[sc.tab] = regionState[sc.tab] || { ...g.defaults });
+    const slow = (g.slowest || []).map((r) => ({ name: r[0], sec: r[1], sp: E.speedLevel(r[1], R.speed.bands) }));
+    const auto = slow.length ? E.regionConcentrated(slow, R.speed.bands) : null;
+    const st = (regionState[sc.tab] = regionState[sc.tab] || { ...g.defaults, ...(auto == null ? {} : { sameArea: auto }) });
     const now = new Date(g.now);
     const reps = g.reports.map((r) => ({ name: r[0], at: new Date(r[1]), symptom: r[2], lv: r[3], state: r[4], repeat: r[5] }));
     const first = reps.reduce((a, r) => (r.at < a ? r.at : a), reps[0].at);
@@ -1204,10 +1486,14 @@ window.SCENARIOS = {
       <div class="tbl"><table><thead><tr><th>지자체</th><th>최초 접수</th><th>증상</th><th>상태</th></tr></thead><tbody>
         ${reps.map((r) => `<tr><td style="font-family:var(--font);color:var(--ink)">${esc(r.name)}${r.repeat ? ' <small>↻ 반복</small>' : ''}</td><td>${E.hm(r.at)}</td><td style="font-family:var(--font)">${esc(r.symptom)}</td><td><span class="pill s-${r.lv}">${ICON[r.lv]} ${esc(r.state)}</span></td></tr>`).join('')}
       </tbody></table></div>
+      ${slow.length ? `<div style="margin-top:14px"><div class="ptitle"><b style="font-size:.9rem">지역별 체감 하위 5곳 — 평균 응답(초, 최근 5분)</b><span class="who">KLID 관제 화면과 같은 체감 4단계 · 가상 예시</span></div>
+        <div class="tbl"><table><thead><tr><th>순위</th><th>권역</th><th>평균 응답</th><th>체감</th></tr></thead><tbody>
+        ${slow.map((r, i) => `<tr><td>${i + 1}</td><td style="font-family:var(--font);color:var(--ink)">${esc(r.name)}</td><td>${r.sec.toFixed(1)}초</td><td><span class="pill s-${r.sp.lv}">${ICON[r.sp.lv]} ${r.sp.name}</span></td></tr>`).join('')}
+        </tbody></table></div></div>` : ''}
       <div class="grid2" style="gap:14px;margin-top:14px">
         <div><b style="font-size:.9rem">원인 가르기 — 세 가지만 답하세요</b>
           <div style="display:grid;gap:8px;margin-top:8px">${Q.map((q) => `<fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0"><legend style="font-size:.85rem;font-weight:600;padding:0 4px">${esc(q.q)}</legend>
-            <div class="hint">${esc(q.hint)}</div>
+            <div class="hint">${esc(q.hint)}</div>${q.id === 'sameArea' && auto != null ? `<div class="hint" style="color:var(--accent);font-weight:600">▶ 체감 하위 표로 자동 판단: ${auto ? `'${esc(slow[0].name)}'만 ${slow[0].sp.name} → 예` : '여러 권역이 함께 느림 → 아니오'}</div>` : ''}
             <div style="display:flex;gap:16px;margin-top:4px"><label class="opt"><input type="radio" name="rq-${q.id}" value="1" ${st[q.id] ? 'checked' : ''}><span>예</span></label><label class="opt"><input type="radio" name="rq-${q.id}" value="0" ${st[q.id] ? '' : 'checked'}><span>아니오</span></label></div></fieldset>`).join('')}</div>
           <div id="regionVerdict" style="margin-top:10px"></div></div>
         <div><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('region', [])}</div>
@@ -1283,23 +1569,74 @@ window.SCENARIOS = {
       () => $('advResult').scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
+  // ── DDoS 모의훈련: [훈련 상황] 표시 + 단계별 진행판·기록 + 문서 ──
+  const drillState = {};
+  function renderDrill(sc) {
+    const el = $('drillPanel'), g = sc.drill;
+    const st = (drillState[sc.tab] = drillState[sc.tab] || { done: Object.fromEntries(g.steps.map((s) => [s[0], s[4]])), defense: true, service: true, cur: 0 });
+    const d0 = new Date(g.date + 'T00:00'), dateText = `${d0.getMonth() + 1}.${d0.getDate()}.(${'일월화수목금토'[d0.getDay()]})`;
+    el.hidden = false;
+    const yn = (id, q, val, yes, no) => `<fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0"><legend style="font-size:.85rem;font-weight:600;padding:0 4px">${q}</legend>
+      <div style="display:flex;gap:16px"><label class="opt"><input type="radio" name="dq-${id}" value="1" ${val ? 'checked' : ''}><span>${yes}</span></label><label class="opt"><input type="radio" name="dq-${id}" value="0" ${val ? '' : 'checked'}><span>${no}</span></label></div></fieldset>`;
+    const draw = () => {
+      const steps = g.steps.map((s) => ({ id: s[0], name: s[1], what: s[2], time: s[3], done: !!st.done[s[0]] }));
+      const m = E.drillMetrics(steps), fmt = (v) => (v == null ? '기록 전' : `${v}분`);
+      const time = (id) => (steps.find((s) => s.id === id) || {}).time || '';
+      el.innerHTML = `<div class="ptitle"><h3>DDoS 모의훈련 — 진행판</h3><span class="pill">${ICON.drill} 훈련 상황 · 실제 아님</span></div>
+        <div class="who">${esc(g.name)} · ${esc(g.org)} · 가상 데이터</div>
+        <div class="facts-grid" style="margin-top:10px">
+          <div class="fact" style="background:var(--drill-bg)"><div class="l">공격 시작 → 탐지</div><div class="v" style="color:var(--drill)">${fmt(m.detect)}</div></div>
+          <div class="fact" style="background:var(--drill-bg)"><div class="l">공격 시작 → 차단</div><div class="v" style="color:var(--drill)">${fmt(m.block)}</div></div>
+          <div class="fact"><div class="l">전체 소요(공지~종료)</div><div class="v">${m.total == null ? '진행 중' : m.total + '분'}</div></div>
+          <div class="fact"><div class="l">진행</div><div class="v">${m.done} / ${m.all}단계</div></div></div>
+        <div class="grid2" style="gap:14px">
+          <div><b style="font-size:.9rem">단계별 확인 — 누르면 완료로 기록됩니다</b>
+            <ol class="dsteps">${steps.map((s) => `<li class="${s.done ? 'done' : ''}"><span class="t">${esc(s.time)}</span><span><b>${esc(s.name)}</b><br><span class="d">${esc(s.what)}</span></span><button type="button" data-step="${s.id}" aria-pressed="${s.done}">${s.done ? '✓ 완료' : '완료'}</button></li>`).join('')}</ol>
+            <div style="display:grid;gap:8px;margin-top:10px">${yn('defense', '탐지·방어가 정상 동작했나요?', st.defense, '예', '아니오')}${yn('service', '대국민 서비스에 특이사항이 없었나요?', st.service, '없음', '있음')}</div></div>
+          <div><b style="font-size:.9rem">바로 쓰는 문서</b>${docsHTML('drill', [])}</div></div>`;
+      el.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => { st.done[b.dataset.step] = !st.done[b.dataset.step]; draw(); }));
+      ['defense', 'service'].forEach((k) => el.querySelectorAll(`input[name="dq-${k}"]`).forEach((r) => r.addEventListener('change', (e) => { st[k] = e.target.value === '1'; draw(); })));
+      const v = { name: g.name, org: g.org, orgShort: '국정자원·개발원', dateText, start: time('notice'), end: st.done.end ? time('end') : '진행 중', reportDue: g.reportDue,
+        defense: st.defense ? '정상적으로 동작 수행되었습니다' : '일부 미흡하여 보완이 필요합니다(세부 내용은 결과보고서에 기재)',
+        service: st.service ? '별다른 특이사항 없었습니다' : '일부 영향이 있었습니다(영향 범위·시간 별도 보고)',
+        endLine: st.done.end ? '최종 서비스 정상 여부 확인까지 완료되었기에 디도스 훈련 종료 보고드립니다.' : '최종 서비스 정상 여부를 확인 중이며, 확인되면 종료 보고드리겠습니다.',
+        detectMin: fmt(m.detect), blockMin: fmt(m.block), totalMin: m.total == null ? '진행 중' : m.total + '분',
+        timeline: steps.map((s) => ` ○ ${s.time} ${s.name} — ${s.done ? '완료' : '예정'}`).join('\n') };
+      el.querySelector('.docs').dataset.cur = st.cur;
+      setDocs(el, 'drill', window.DRILL_TEMPLATES.map((t) => ({ name: t.name, to: t.to, text: E.fill(t.body, v) })));
+      el.querySelectorAll('.doctabs button').forEach((b) => b.addEventListener('click', () => (st.cur = +b.dataset.i)));
+    };
+    draw();
+  }
+
   // ── 상황판 ──
   function renderBoard(key) {
     const sc = S[key];
     document.querySelectorAll('#scenarioTabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === key)));
     $('asof').textContent = sc.asof; $('tvScenario').textContent = sc.tab;
     $('verdict').className = 'verdict s-' + sc.level;
-    $('lamp').textContent = ICON[sc.level];
+    const gk = M.byScenario[key] || M.byLevel[sc.level] || 'normal';
+    $('gkArt').innerHTML = M.svg(gk, 120); $('gkArt').dataset.state = gk;
+    $('gkSay').innerHTML = gkSay(gk);
     $('vTitle').textContent = sc.title;
     $('vText').textContent = sc.text;
     $('systems').innerHTML = sc.sys.map((y) => `<section class="panel s-${y.level}">
       <div class="ptitle"><h3>${esc(y.name)}</h3><span class="pill">${ICON[y.level]} ${LABEL[y.level]}</span></div>
-      <div class="who">${esc(y.who)}</div><p class="say">${esc(y.say)}</p>
+      <div class="who">${esc(y.who)} · 체감 <b>${esc(y.speed || R.speed.byLevel[y.level])}</b></div><p class="say">${esc(y.say)}</p>
       <div class="kpis">${y.k.map((k, i) => `<div class="kpi s-${(y.kc || [])[i] || y.level}"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="n">${k[2]}</div></div>`).join('')}</div>
       <div class="spark">${spark(y.curve, y.level)}<div class="cap"><span>오늘 이용자 추이(가상)</span><span>● 현재</span></div></div></section>`).join('');
     $('tiles').innerHTML = sc.tiles.map((t) => `<div class="tile s-${t[1]}"><b>${esc(t[0])}</b><span>${ICON[t[1]]} ${esc(t[2] || TILE_TXT[t[1]])}</span></div>`).join('');
     $('threatPanel').hidden = !sc.threat; if (sc.threat) renderThreat(sc);
     $('regionPanel').hidden = !sc.region; if (sc.region) renderRegion(sc);
+    $('drillPanel').hidden = !sc.drill; if (sc.drill) renderDrill(sc);
+    $('drillRibbon').hidden = sc.level !== 'drill';
+    // 작업관리 현황(KLID 관제 화면과 같은 구분) + 작업 영향 가능 표시
+    const works = sc.work || [], imp = E.workImpact(sc.level, works, R);
+    if (imp) $('vText').textContent += ' 작업 영향 가능 — 아래 작업관리 현황을 먼저 확인하세요.';
+    $('workPanel').innerHTML = `<div class="ptitle"><h3>작업관리 현황</h3><span class="who">정기점검·업데이트·장애조치 · 가상 데이터</span></div>
+      <div class="facts-grid" style="margin-top:8px">${['전체', ...R.work.types].map((t) => `<div class="fact"><div class="l">${t}</div><div class="v">${t === '전체' ? works.length : works.filter((w) => w.type === t).length}건</div></div>`).join('')}</div>
+      ${works.length ? `<div class="tbl"><table><thead><tr><th>구분</th><th>작업</th><th>시간</th><th>상태</th></tr></thead><tbody>${works.map((w) => `<tr><td>${esc(w.type)}</td><td style="font-family:var(--font);color:var(--ink)">${esc(w.name)}</td><td>${esc(w.time)}</td><td style="font-family:var(--font)">${esc(w.status)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="who">진행 중이거나 최근 끝난 작업이 없습니다.</p>'}
+      ${imp ? `<div class="warnbox" style="border-left-color:var(--warn);background:var(--warn-bg)"><b>▲ 작업 영향 가능</b> — ${esc(imp.map((w) => w.name).join(', '))}<br>${esc(R.work.hint)}</div>` : ''}`;
     if (sc.incident) { const i = sc.incident; renderGolden($('boardGolden'), { ...i, start: new Date(i.start) }, i.elapsed); }
     else $('boardGolden').hidden = true;
     store.set('gt-scenario', key);
@@ -1324,7 +1661,7 @@ window.SCENARIOS = {
     const input = readForm();
     if (!input || !input.services.length) {
       lastType = null;
-      $('result').innerHTML = '<div class="result-empty">왼쪽에서 발생 일시와 안 되는 서비스를 고르세요.</div>';
+      $('result').innerHTML = '<div class="result-empty"><span class="gk-mini" data-gk="normal"></span><span>왼쪽에서 발생 일시와 안 되는 서비스를 고르면, 골키퍼가 매뉴얼 기준으로 바로 판정해 드려요.</span></div>'; gkFill($('result'));
       $('intakeGolden').hidden = true; return;
     }
     loadHolidays(input.start.getFullYear());
@@ -1414,18 +1751,22 @@ window.SCENARIOS = {
   };
   window.GT_ALARM = Alarm; // 미리듣기·점검용
   let toastTimer = null;
-  function raiseAlert(levelKey, title, text, go) {
+  function raiseAlert(levelKey, title, text, go, gk) {
     const lv = R.alerts[levelKey]; if (!lv) return;
+    gk = gk || { critical: 'bad', urgent: 'threat', info: 'warn', drill: 'drill' }[levelKey] || 'normal';
     const when = new Date();
-    try { if (Alarm.on && 'Notification' in window && Notification.permission === 'granted' && levelKey !== 'info') new Notification(`[${lv.name}] ${title}`, { body: text }); } catch (e) {}
-    if (levelKey === 'info') {
-      const t = $('toast'); t.textContent = `[${lv.name}] ${title}`; t.hidden = false;
-      clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 5000); return;
+    try { if (Alarm.on && 'Notification' in window && Notification.permission === 'granted' && !lv.toast) new Notification(`[${lv.name}] ${title}`, { body: text }); } catch (e) {}
+    if (lv.toast) { // 안전안내·훈련: 화면을 가리지 않는 띠 알림(훈련은 짧은 알림음)
+      const t = $('toast'); t.innerHTML = `<span class="gk-mini">${M.svg(gk, 40)}</span><span>[${esc(lv.name)}] ${esc(title.replace(/^\[[^\]]+\]\s*/, ''))}</span>`; t.hidden = false;
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 5000);
+      if (lv.sound) Alarm.play(lv.sound);
+      return;
     }
     const ov = $('alertOverlay');
     ov.className = `alert-overlay lv-${levelKey}${lv.flash ? ' flash' : ''}`;
     $('alertLevel').textContent = `${lv.name} 경보`;
     $('alertTitle').textContent = title; $('alertText').textContent = text;
+    $('alertGk').innerHTML = M.svg(gk, 104); $('alertGk').dataset.state = gk; $('alertSay').innerHTML = gkSay(gk);
     $('alertMeta').textContent = `${E.fullText(when)} 발령 · ${Alarm.on ? (lv.soundLabel ? lv.soundLabel + ' 연주' : '소리 없음') : '경보음 꺼짐 — 오른쪽 위에서 켤 수 있습니다'}`;
     ov.hidden = false; $('alertAck').focus();
     $('alertGo').onclick = () => { closeAlert(); if (go) go(); };
@@ -1441,14 +1782,14 @@ window.SCENARIOS = {
   });
   function boardAlert(key) {
     const sc = S[key], lv = R.alertMap.board[sc.level]; if (!lv) return;
-    const target = sc.incident ? 'boardGolden' : sc.threat ? 'threatPanel' : sc.region ? 'regionPanel' : 'tiles';
-    raiseAlert(lv, sc.title, sc.text, () => $(target).scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    const target = sc.incident ? 'boardGolden' : sc.threat ? 'threatPanel' : sc.region ? 'regionPanel' : sc.drill ? 'drillPanel' : 'tiles';
+    raiseAlert(lv, sc.title, sc.text, () => $(target).scrollIntoView({ behavior: 'smooth', block: 'start' }), M.byScenario[key]);
   }
   let lastType = null;
   function intakeAlert(res) {
     if (!res.type || res.type === lastType) { lastType = res.type; return; }
     lastType = res.type;
-    raiseAlert(R.alertMap.type[res.type], `${R.types[res.type].name} · ${res.grade}등급 장애 판정`, res.emergency, () => $('intakeGolden').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    raiseAlert(R.alertMap.type[res.type], `${R.types[res.type].name} · ${res.grade}등급 장애 판정`, res.emergency, () => $('intakeGolden').scrollIntoView({ behavior: 'smooth', block: 'start' }), res.type === 3 ? 'warn' : 'bad');
   }
 
   // ── TV 모드: 사무실 벽걸이 TV용 큰 화면(결론·신호등·업무별 상태만), 키보드로 조작 ──
@@ -1505,6 +1846,7 @@ window.SCENARIOS = {
   // ── 시작 ──
   $('scenarioTabs').innerHTML = Object.entries(S).map(([k, s]) => `<button id="sc-${k}" data-s="${k}">${esc(s.tab)}</button>`).join('');
   document.querySelectorAll('#scenarioTabs button').forEach((b) => b.addEventListener('click', () => { renderBoard(b.dataset.s); boardAlert(b.dataset.s); }));
+  $('brandGk').innerHTML = M.svg('hero', 46, `${M.name}(${M.full})`); gkFill();
   document.querySelectorAll('.nav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
   buildForm();
   $('form').addEventListener('input', renderIntake);
@@ -1520,6 +1862,7 @@ window.SCENARIOS = {
   const VIEWS = ['board', 'intake', 'advisory'], saved = store.get('gt-view', 'board');
   show(VIEWS.includes(hash) ? hash : VIEWS.includes(saved) ? saved : 'board');
 })();
+
 
 </script>
 </body>

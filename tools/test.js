@@ -53,5 +53,25 @@ check('Laravel 본문 미확인 → 확인 필요', m('laravel', 'laravel', '10.
 check('다른 제품은 대조 대상 아님', E.matchAdvisory(A.java, { sw: 'php', version: '8.3.30' }), null);
 check('PHP 8.2.36 → 해결 버전이나 지원 종료 예정 안내', (E.matchAdvisory(A['php-urgent'], { sw: 'php', version: '8.2.36' }) || {}).why.includes('12.31.'), true);
 check('PHP 8.2.34 → 해당', m('php-urgent', 'php', '8.2.34'), 'yes');
+
+// ── 체감속도 4단계 · 권역 몰림 ──
+const B = R.speed.bands;
+check('응답 1.2초 → 체감속도', E.speedLevel(1.2, B).name, '원활');
+check('응답 1.8초 → 체감속도', E.speedLevel(1.8, B).name, '보통');
+check('응답 2.5초 → 체감속도', E.speedLevel(2.5, B).name, '지체');
+check('응답 4.6초 → 체감속도', E.speedLevel(4.6, B).name, '정체');
+check('1위 권역만 정체 → 한 권역 몰림', E.regionConcentrated([{ sec: 4.6 }, { sec: 1.7 }, { sec: 1.4 }], B), true);
+check('여러 권역 지체 → 몰림 아님', E.regionConcentrated([{ sec: 4.6 }, { sec: 2.8 }, { sec: 1.4 }], B), false);
+
+// ── 작업관리: 작업 영향 가능 ──
+check('주의 + 진행 중 작업 → 작업 영향 가능', (E.workImpact('warn', [{ status: '진행 중' }], R) || []).length, 1);
+check('장애 + 9시간 전 끝난 작업(12시간 이내) → 작업 영향 가능', (E.workImpact('bad', [{ status: '완료', endedHoursAgo: 9 }], R) || []).length, 1);
+check('평상시 → 작업 영향 판단 안 함', E.workImpact('ok', [{ status: '진행 중' }], R), null);
+
+// ── 모의훈련 기록 ──
+const dm = E.drillMetrics([{ id: 'notice', time: '14:00', done: true }, { id: 'attack', time: '14:05', done: true }, { id: 'detect', time: '14:06', done: true }, { id: 'block', time: '14:08', done: true }, { id: 'end', time: '', done: false }]);
+check('훈련: 공격 → 차단까지 걸린 분', dm.block, 3);
+check('훈련: 종료 전이면 전체 소요는 기록 전', dm.total, null);
+
 console.log(fail ? `\n${fail}건 실패` : '\n모두 통과');
 process.exit(fail ? 1 : 0);

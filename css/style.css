@@ -3,7 +3,7 @@
   --bg:#eef1f5; --panel:#ffffff; --ink:#16202e; --muted:#5b6778; --line:#d5dbe4; --soft:#f5f7fa;
   --navy:#1f3864; --accent:#2e5597; --on-accent:#ffffff;
   --ok:#1f8a4c; --ok-bg:#e3f4ea; --warn:#b26a00; --warn-bg:#fff1d6; --bad:#c0262d; --bad-bg:#fde4e4;
-  --threat:#5b3fa8; --threat-bg:#ece7fa;
+  --threat:#5b3fa8; --threat-bg:#ece7fa; --drill:#0f6e85; --drill-bg:#e0f2f6;
   --font:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
 }
@@ -11,12 +11,12 @@
   --bg:#0f1520; --panel:#172131; --ink:#e7edf5; --muted:#9aa7ba; --line:#2a3850; --soft:#1b2738;
   --navy:#a9c1ea; --accent:#7ea3e6; --on-accent:#0f1520;
   --ok:#4cc483; --ok-bg:#163526; --warn:#f0b04a; --warn-bg:#3a2c12; --bad:#ff6b6f; --bad-bg:#3d1a1d;
-  --threat:#b9a4ff; --threat-bg:#2a2148; color-scheme:dark}}
+  --threat:#b9a4ff; --threat-bg:#2a2148; --drill:#5fd0e6; --drill-bg:#12333b; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1520; --panel:#172131; --ink:#e7edf5; --muted:#9aa7ba; --line:#2a3850; --soft:#1b2738;
   --navy:#a9c1ea; --accent:#7ea3e6; --on-accent:#0f1520;
   --ok:#4cc483; --ok-bg:#163526; --warn:#f0b04a; --warn-bg:#3a2c12; --bad:#ff6b6f; --bad-bg:#3d1a1d;
-  --threat:#b9a4ff; --threat-bg:#2a2148; color-scheme:dark}
+  --threat:#b9a4ff; --threat-bg:#2a2148; --drill:#5fd0e6; --drill-bg:#12333b; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;margin:0;
@@ -39,7 +39,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .lamp{flex:none;width:64px;height:64px;border-radius:50%;background:var(--c);display:grid;place-items:center;color:var(--panel);font-size:1.7rem;font-weight:700;box-shadow:0 0 0 6px var(--cbg),0 0 0 8px var(--c)}
 .verdict h2{margin:0;font-size:1.45rem;color:var(--c);text-wrap:balance}
 .verdict p{margin:4px 0 0;font-size:1rem}
-.s-ok{--c:var(--ok);--cbg:var(--ok-bg)} .s-warn{--c:var(--warn);--cbg:var(--warn-bg)} .s-bad{--c:var(--bad);--cbg:var(--bad-bg)} .s-threat{--c:var(--threat);--cbg:var(--threat-bg)}
+.s-ok{--c:var(--ok);--cbg:var(--ok-bg)} .s-warn{--c:var(--warn);--cbg:var(--warn-bg)} .s-bad{--c:var(--bad);--cbg:var(--bad-bg)} .s-threat{--c:var(--threat);--cbg:var(--threat-bg)} .s-drill{--c:var(--drill);--cbg:var(--drill-bg)}
 
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:18px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
@@ -126,7 +126,7 @@ th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;verti
 th{color:var(--muted);font-weight:600;font-size:.78rem}
 td:first-child{font-family:var(--mono);color:var(--muted)}
 .foot{font-size:.78rem;color:var(--muted)}
-@media (prefers-reduced-motion:no-preference){.s-bad .lamp{animation:pulse 1.6s ease-in-out infinite}}
+
 @keyframes pulse{50%{box-shadow:0 0 0 10px var(--cbg),0 0 0 12px var(--c)}}
 
 /* 긴급 경보(재난문자형) */
@@ -178,3 +178,47 @@ body.tv .tile b{font-size:1.1rem}
 body.tv .tile span{font-size:.85rem}
 body.tv .kpi .v{font-size:1.7rem;white-space:nowrap}
 body.tv .spark{display:none}
+
+/* DDoS 모의훈련 — 실제 상황과 구분되는 줄무늬 띠 */
+.drill-ribbon{text-align:center;font-weight:700;letter-spacing:.12em;color:var(--on-accent);padding:8px 12px;border-radius:8px;
+  background:repeating-linear-gradient(-45deg,var(--drill) 0 18px,color-mix(in srgb,var(--drill) 80%,#000) 18px 36px)}
+.dsteps{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.dsteps li{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:6px}
+.dsteps li.done{background:var(--drill-bg);border-color:var(--drill)}
+.dsteps .t{font-family:var(--mono);font-weight:600}
+.dsteps .d{font-size:.8rem;color:var(--muted)}
+.dsteps button{font:inherit;font-size:.8rem;cursor:pointer;border:1px solid var(--drill);color:var(--drill);background:transparent;border-radius:6px;padding:4px 10px;white-space:nowrap}
+.dsteps li.done button{background:var(--drill);color:var(--on-accent)}
+body.tv #drillPanel,body.tv #workPanel{display:none!important}
+
+/* 캐릭터 「골키퍼」(골든타임 키퍼) — data/mascot.js */
+.brand{display:flex;gap:10px;align-items:center}
+.brand-gk svg{display:block}
+.gk-art{flex:none;width:120px;height:120px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.08))}
+.gk-art svg{display:block;width:100%;height:100%}
+.gk-say{position:relative;display:inline-block;margin:10px 0 0!important;padding:8px 14px;border-radius:14px;background:var(--panel);border:2px solid var(--c,var(--navy));font-size:.95rem;line-height:1.45;color:var(--ink)}
+.gk-say b{color:var(--c,var(--navy));margin-right:4px}
+.verdict .gk-say::before{content:"";position:absolute;left:-9px;top:14px;width:14px;height:14px;background:var(--panel);border-left:2px solid var(--c);border-bottom:2px solid var(--c);transform:rotate(45deg)}
+.gk-mini{flex:none;display:inline-block;line-height:0}
+.gk-row{display:flex;gap:10px;align-items:center;margin-top:8px}
+.gk-row .gk-say{margin:0!important;--c:var(--threat)}
+.result-empty{display:flex;gap:12px;align-items:center;justify-content:center;text-align:left}
+.alert-head{display:flex;gap:14px;align-items:center}
+.alert-gk{flex:none;width:104px;height:104px}
+.alert-card .gk-say{--c:var(--lv);justify-self:start}
+.lv-info{--lv:var(--warn)} .lv-drill{--lv:var(--drill)}
+.toast:not([hidden]){display:flex;gap:10px;align-items:center}
+@media (prefers-reduced-motion:no-preference){
+  .gk-art[data-state="bad"] svg,.alert-gk[data-state="bad"] svg{animation:gkhop 1.2s ease-in-out infinite;transform-origin:50% 90%}
+  .gk-art[data-state="threat"] svg,.alert-gk[data-state="threat"] svg{animation:gkdive 2.4s ease-in-out infinite;transform-origin:50% 90%}
+  .gk-art[data-state="warn"] svg,.gk-art[data-state="region"] svg{animation:gksway 3s ease-in-out infinite;transform-origin:50% 90%}
+  .gk-art[data-state="normal"] svg{animation:gkbreathe 4s ease-in-out infinite;transform-origin:50% 90%}
+}
+@keyframes gkhop{50%{transform:translateY(-6px)}}
+@keyframes gkdive{40%,60%{transform:translateX(4px) rotate(4deg)}}
+@keyframes gksway{50%{transform:rotate(-3deg)}}
+@keyframes gkbreathe{50%{transform:scale(1.025)}}
+body.tv .gk-art{width:min(18vw,200px);height:min(18vw,200px)}
+body.tv .gk-say{font-size:1rem}
+@media (max-width:560px){.verdict{align-items:flex-start;gap:10px;padding:16px}.gk-art{width:64px;height:64px}.verdict .gk-say::before{display:none}.alert-gk{width:72px;height:72px}}
+

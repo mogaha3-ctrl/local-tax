@@ -175,6 +175,32 @@
     return null;
   }
 
-  const api = { classify, timeline, deadline, fill, fullText, hm, ymd, addMin, diagnoseRegion, vcmp, matchAdvisory };
+  /**
+   * 모의훈련 기록 — steps = [{ id, time:'HH:MM'|'', done }]
+   * 공격 시작(attack) 기준 탐지·차단까지 걸린 분, 공지(notice)~종료(end) 전체 소요
+   */
+  function drillMetrics(steps) {
+    const at = (id) => { const s = steps.find((x) => x.id === id && x.done && /^\d\d:\d\d$/.test(x.time)); if (!s) return null; const [h, m] = s.time.split(':').map(Number); return h * 60 + m; };
+    const gap = (a, b) => (at(a) == null || at(b) == null ? null : at(b) - at(a));
+    return { detect: gap('attack', 'detect'), block: gap('attack', 'block'), total: gap('notice', 'end'),
+      done: steps.filter((s) => s.done).length, all: steps.length };
+  }
+
+  /** 체감속도: 응답시간(초) → 원활·보통·지체·정체 */
+  function speedLevel(sec, bands) { return bands.find((b) => sec <= b.upTo) || bands[bands.length - 1]; }
+  /** 지역별 체감 하위 목록(느린 순) → 한 권역 몰림: 1위만 지체·정체이고 나머지는 원활·보통 */
+  function regionConcentrated(list, bands) {
+    const lv = list.map((r) => speedLevel(r.sec, bands).lv);
+    return lv[0] !== 'ok' && lv.slice(1).every((x) => x === 'ok');
+  }
+  /** 작업 영향 가능: 상태가 주의·장애이고, 진행 중이거나 recentHours 안에 끝난 작업이 있으면 그 작업 목록 */
+  function workImpact(level, works, rules) {
+    if (!['warn', 'bad'].includes(level)) return null;
+    const hit = works.filter((w) => w.status === '진행 중' || (w.endedHoursAgo != null && w.endedHoursAgo <= rules.work.recentHours));
+    return hit.length ? hit : null;
+  }
+
+  const api = { speedLevel, regionConcentrated, workImpact, drillMetrics, classify, timeline, deadline, fill, fullText, hm, ymd, addMin, diagnoseRegion, vcmp, matchAdvisory };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== 'undefined' ? window : globalThis);
+
